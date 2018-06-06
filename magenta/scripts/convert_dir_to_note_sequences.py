@@ -77,7 +77,8 @@ def convert_files(root_dir, sub_dir, writer, recursive=False):
     if (full_file_path.lower().endswith('.mid') or
         full_file_path.lower().endswith('.midi')):
       try:
-        sequence = convert_midi(root_dir, sub_dir, full_file_path)
+        metadata = extract_metadata(full_file_path)
+        sequence = convert_midi(root_dir, sub_dir, full_file_path, metadata)
       except Exception as exc:  # pylint: disable=broad-except
         tf.logging.fatal('%r generated an exception: %s', full_file_path, exc)
         continue
@@ -101,6 +102,8 @@ def convert_files(root_dir, sub_dir, writer, recursive=False):
       if sequences:
         for sequence in sequences:
           writer.write(sequence)
+    elif full_file_path.lower().endswith('.txt'):
+        tf.logging.info("Text file detected: %s", full_file_path)
     else:
       if recursive and tf.gfile.IsDirectory(full_file_path):
         recurse_sub_dirs.append(os.path.join(sub_dir, file_in_dir))
@@ -111,8 +114,31 @@ def convert_files(root_dir, sub_dir, writer, recursive=False):
   for recurse_sub_dir in recurse_sub_dirs:
     convert_files(root_dir, recurse_sub_dir, writer, recursive)
 
+def extract_metadata(full_file_path):
+  """ Extracts title, artist, genre(s) and composer(s) from text file
 
-def convert_midi(root_dir, sub_dir, full_file_path):
+  Args:
+    full_file_path: the full path to the corresponding MIDI file.
+
+  Returns:
+    A dictionary of metadata corresponding to the MIDI file
+  """
+
+  metadata = {title:'', artist:'', genres:'', composers:''}
+
+  extensionless_file, _ = os.path.splitext(full_file_path)
+
+  with open(extensionless_file + '.txt') as file:
+    _ = file.readline() # URL
+    metadata[title] = file.readline().stripr('\n')
+    metadata[composers] = file.readline().stripr('\n') # TODO: allow multiple composers
+    metadata[artist] = file.readline().stripr('\n')
+
+  # Note: genre is left blank
+
+  return metadata
+
+def convert_midi(root_dir, sub_dir, full_file_path, metadata=None):
   """Converts a midi file to a sequence proto.
 
   Args:
@@ -120,13 +146,15 @@ def convert_midi(root_dir, sub_dir, full_file_path):
         converted.
     sub_dir: The directory being converted currently.
     full_file_path: the full path to the file to convert.
+    metadata: A dictionary of metadata corresponding to the MIDI file
 
   Returns:
     Either a NoteSequence proto or None if the file could not be converted.
   """
   try:
     sequence = midi_io.midi_to_sequence_proto(
-        tf.gfile.FastGFile(full_file_path, 'rb').read())
+        tf.gfile.FastGFile(full_file_path, 'rb').read(),
+        metadata)
   except midi_io.MIDIConversionError as e:
     tf.logging.warning(
         'Could not parse MIDI file %s. It will be skipped. Error was: %s',

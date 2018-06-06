@@ -91,7 +91,7 @@ class BasePerformance(events_lib.EventSequence):
   __metaclass__ = abc.ABCMeta
 
   def __init__(self, start_step, num_velocity_bins, max_shift_steps,
-               program=None, is_drum=None):
+               program=None, is_drum=None, composer):
     """Construct a BasePerformance.
 
     Args:
@@ -102,6 +102,7 @@ class BasePerformance(events_lib.EventSequence):
       program: MIDI program used for this performance, or None if not specified.
       is_drum: Whether or not this performance consists of drums, or None if not
           specified.
+      composer: Last name of the person who composed the performance
 
     Raises:
       ValueError: If `num_velocity_bins` is larger than the number of MIDI
@@ -116,6 +117,7 @@ class BasePerformance(events_lib.EventSequence):
     self._max_shift_steps = max_shift_steps
     self._program = program
     self._is_drum = is_drum
+    self._composer = composer
 
   @property
   def start_step(self):
@@ -500,7 +502,7 @@ class Performance(BasePerformance):
   def __init__(self, quantized_sequence=None, steps_per_second=None,
                start_step=0, num_velocity_bins=0,
                max_shift_steps=DEFAULT_MAX_SHIFT_STEPS, instrument=None,
-               program=None, is_drum=None):
+               program=None, is_drum=None, composer=None):
     """Construct a Performance.
 
     Either quantized_sequence or steps_per_second should be supplied.
@@ -521,6 +523,7 @@ class Performance(BasePerformance):
           Ignored if `quantized_sequence` is provided.
       is_drum: Whether or not this performance consists of drums, or None if not
           specified. Ignored if `quantized_sequence` is provided.
+      composer: Last name of the person who composed the performance
 
     Raises:
       ValueError: If both or neither of `quantized_sequence` or
@@ -549,7 +552,8 @@ class Performance(BasePerformance):
         num_velocity_bins=num_velocity_bins,
         max_shift_steps=max_shift_steps,
         program=program,
-        is_drum=is_drum)
+        is_drum=is_drum,
+        composer=composer)
 
   @property
   def steps_per_second(self):
@@ -584,7 +588,7 @@ class Performance(BasePerformance):
         program=program,
         max_note_duration=max_note_duration)
 
-
+# TODO: Add composer arg/conditioning option here?
 class MetricPerformance(BasePerformance):
   """Performance with quarter-note relative timing."""
 

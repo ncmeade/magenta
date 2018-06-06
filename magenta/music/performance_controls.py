@@ -27,6 +27,7 @@ from magenta.music.performance_lib import PerformanceEvent
 NOTES_PER_OCTAVE = constants.NOTES_PER_OCTAVE
 DEFAULT_NOTE_DENSITY = 15.0
 DEFAULT_PITCH_HISTOGRAM = [1.0] * NOTES_PER_OCTAVE
+DEFAULT_COMPOSER = None
 
 
 class PerformanceControlSignal(object):
@@ -206,6 +207,90 @@ class NoteDensityPerformanceControlSignal(PerformanceControlSignal):
       else:
         return self._density_bin_ranges[index - 1]
 
+#________________________ComposerConditioning______________
+class ComposerPerformanceControlSignal(PerformanceControlSignal):
+  """Composer performance control signal."""
+
+  name = 'composer'
+  description = "Composer who's style is desired."
+
+  def __init__(self, composers):
+    """Initialize a ComposerPerformanceControlSignal.
+
+    Args:
+      composers: List of all possible composers in for this model
+    """
+    self._encoder = encoder_decoder.OneHotEventSequenceEncoderDecoder(
+        self.ComposerOneHotEncoding(composers))
+
+  def validate(self, value):
+    return value in composers
+
+  @property
+  def default_value(self):
+    return DEFAULT_COMPOSER # TODO: implement this
+
+  @property
+  def encoder(self):
+    return self._encoder
+
+  # TODO: implement this
+  def extract(self, performance):
+    """Uses the same composer for every event in performance.
+
+    Args:
+      performance: A Performance object for which to create composer
+          sequence.
+
+    Returns:
+      A list of composers the same length as `performance`, with each
+      entry equal to the composer of the performance. *********** check if there is a more
+      compact way to do this *******
+    """
+    window_size_steps = int(round(
+        self._window_size_seconds * performance.steps_per_second))
+
+    composer_sequence = []
+
+    # TODO: Refactor to make this more efficient
+    for i, event in enumerate(performance):
+      composer_sequence.append(composer)
+
+    return composer_sequence
+
+class ComposerOneHotEncoding(encoder_decoder.OneHotEncoding):
+    """One-hot encoding for performance composer events.
+
+    Encodes composer using their corresponding index in the composers list arg. 
+    Decodes by returning the composer at the given index.
+    """
+
+    def __init__(self, composers):
+      """Initialize a NoteDensityOneHotEncoding.
+
+      Args:
+        composers: List of all possible composers used in in conditioning the model
+      """
+      self._composers = composers
+
+    @property
+    def num_classes(self):
+      return len(self.composers)
+
+    @property
+    def default_event(self):
+      return None # TODO: check that this makes sense
+
+    def encode_event(self, event):
+      for idx, composer in enumerate(self._composers):
+        if event == composer:
+          return idx
+      #TODO: Handle case when composer is not found (throw exception)
+
+    def decode_event(self, index):
+      return self._composers[index]
+      #TODO: Handle exception
+
 
 class PitchHistogramPerformanceControlSignal(PerformanceControlSignal):
   """Pitch class histogram performance control signal."""
@@ -333,5 +418,6 @@ class PitchHistogramPerformanceControlSignal(PerformanceControlSignal):
 # List of performance control signal classes.
 all_performance_control_signals = [
     NoteDensityPerformanceControlSignal,
-    PitchHistogramPerformanceControlSignal
+    PitchHistogramPerformanceControlSignal,
+    ComposerPerformanceControlSignal
 ]

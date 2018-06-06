@@ -24,6 +24,9 @@ import magenta
 from magenta.models.shared import events_rnn_model
 from magenta.music.performance_lib import PerformanceEvent
 
+# Master list of composers in current model
+COMPOSER_MASTER_LIST = None
+
 
 # State for constructing a time-varying control sequence. Keeps track of the
 # current event position and time step in the generated performance, to allow
@@ -267,6 +270,25 @@ default_configs = {
                 window_size_seconds=5.0)
         ]),
 
+    'composer_conditioned_performance_with_dynamics': PerformanceRnnConfig(
+        magenta.protobuf.generator_pb2.GeneratorDetails(
+            id='composer_conditioned_performance_with_dynamics',
+            description='Composer-conditioned Performance RNN'),
+        magenta.music.OneHotEventSequenceEncoderDecoder(
+            magenta.music.PerformanceOneHotEncoding(
+                num_velocity_bins=32)),
+        tf.contrib.training.HParams(
+            batch_size=64,
+            rnn_layer_sizes=[512, 512, 512],
+            dropout_keep_prob=1.0,
+            clip_norm=3,
+            learning_rate=0.001),
+        num_velocity_bins=32,
+        control_signals=[
+            magenta.music.ComposerPerformanceControlSignal(
+                composers=COMPOSER_MASTER_LIST)
+        ]),
+
     'multiconditioned_performance_with_dynamics': PerformanceRnnConfig(
         magenta.protobuf.generator_pb2.GeneratorDetails(
             id='multiconditioned_performance_with_dynamics',
@@ -286,7 +308,9 @@ default_configs = {
                 window_size_seconds=3.0,
                 density_bin_ranges=[1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0]),
             magenta.music.PitchHistogramPerformanceControlSignal(
-                window_size_seconds=5.0)
+                window_size_seconds=5.0),
+            magenta.music.ComposerPerformanceControlSignal(
+                composers=COMPOSER_MASTER_LIST)
         ]),
 
     'optional_multiconditioned_performance_with_dynamics': PerformanceRnnConfig(
@@ -308,7 +332,9 @@ default_configs = {
                 window_size_seconds=3.0,
                 density_bin_ranges=[1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0]),
             magenta.music.PitchHistogramPerformanceControlSignal(
-                window_size_seconds=5.0)
+                window_size_seconds=5.0),
+            magenta.music.ComposerPerformanceControlSignal(
+                composers=COMPOSER_MASTER_LIST)
         ],
         optional_conditioning=True)
 }
