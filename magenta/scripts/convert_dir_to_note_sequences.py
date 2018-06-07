@@ -83,7 +83,7 @@ def convert_files(root_dir, sub_dir, writer, recursive=False):
         full_file_path.lower().endswith('.midi')):
       try:
         metadata = extract_metadata(full_file_path)
-        sequence = convert_midi(root_dir, sub_dir, full_file_path, metadata)
+        sequence = convert_midi(root_dir, sub_dir, full_file_path, metadata=metadata)
       except Exception as exc:  # pylint: disable=broad-except
         tf.logging.fatal('%r generated an exception: %s', full_file_path, exc)
         continue
@@ -129,21 +129,21 @@ def extract_metadata(midi_file_path):
     A dictionary of metadata corresponding to the MIDI file
   """
 
-  metadata = {title:'', artist:'', genres:'', composers:''}
+  metadata = {'title':'', 'artist':'', 'genres':'', 'composers':''}
 
   extensionless_file, _ = os.path.splitext(midi_file_path)
   text_file = extensionless_file + '.txt'
 
   with open(text_file) as file:
     _ = file.readline() # URL
-    metadata[title] = file.readline().stripr('\n') # TODO: allow conditioning by title
-    metadata[composers] = file.readline().stripr('\n') # TODO: allow multiple composers
-    metadata[artist] = file.readline().stripr('\n') # TODO: allow conditioning by artist
+    metadata['title'] = file.readline().rstrip('\n') # TODO: allow conditioning by title
+    metadata['composers'] = file.readline().rstrip('\n') # TODO: allow multiple composers
+    metadata['artist'] = file.readline().rstrip('\n') # TODO: allow conditioning by artist
 
   # Note: genre is left blank
 
   # Update a master list of composers to be used when encoding to one-hot
-  update_composer_master_list(metadata[composers])
+  update_composer_master_list(metadata['composers'])
 
   return metadata
 
@@ -156,9 +156,9 @@ def update_composer_master_list(composer):
 def  write_composer_data(note_sequence_output_file):
 
   # use alternate output_file (the given one is for the note sequences)
-  output_file = os.path.join(os.path.dirname(note_sequence_output_file), 'composer_data.txt')
+  output_file = os.path.join(os.path.dirname(note_sequence_output_file), 'composer_metadata.json')
 
-  with open(output_file, 'r+') as file:
+  with open(output_file, 'w+') as file:
     # Save composer_master_list as JSON
     json.dump(composer_master_list, file)
 
@@ -178,7 +178,7 @@ def convert_midi(root_dir, sub_dir, full_file_path, metadata=None):
   try:
     sequence = midi_io.midi_to_sequence_proto(
         tf.gfile.FastGFile(full_file_path, 'rb').read(),
-        metadata)
+        metadata=metadata)
   except midi_io.MIDIConversionError as e:
     tf.logging.warning(
         'Could not parse MIDI file %s. It will be skipped. Error was: %s',
@@ -274,7 +274,7 @@ def convert_directory(root_dir, output_file, recursive=False):
     convert_files(root_dir, '', writer, recursive)
 
   with open(output_file) as f:
-
+    pass
 
 
 def main(unused_argv):
