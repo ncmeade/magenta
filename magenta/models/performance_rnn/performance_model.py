@@ -24,9 +24,10 @@ import magenta
 from magenta.models.shared import events_rnn_model
 from magenta.music.performance_lib import PerformanceEvent
 
+# TODO: make this less hacky
+# TODO: include the file path before running
 # Master list of composers in current model
-COMPOSER_MASTER_LIST = None
-
+composer_master_list = json.load("file path goes here")
 
 # State for constructing a time-varying control sequence. Keeps track of the
 # current event position and time step in the generated performance, to allow
@@ -111,7 +112,6 @@ class PerformanceRnnModel(events_rnn_model.EventSequenceRnnModel):
 
     return self._evaluate_log_likelihood(
         [sequence], control_events=control_events)[0]
-
 
 def _extend_control_events(control_signal_fns, disable_conditioning_fn,
                            control_events, performance, control_state):
@@ -286,7 +286,7 @@ default_configs = {
         num_velocity_bins=32,
         control_signals=[
             magenta.music.ComposerPerformanceControlSignal(
-                composers=COMPOSER_MASTER_LIST)
+                composers=composer_master_list)
         ]),
 
     'multiconditioned_performance_with_dynamics': PerformanceRnnConfig(
@@ -310,7 +310,7 @@ default_configs = {
             magenta.music.PitchHistogramPerformanceControlSignal(
                 window_size_seconds=5.0),
             magenta.music.ComposerPerformanceControlSignal(
-                composers=COMPOSER_MASTER_LIST)
+                composers=composer_master_list)
         ]),
 
     'optional_multiconditioned_performance_with_dynamics': PerformanceRnnConfig(
@@ -334,7 +334,7 @@ default_configs = {
             magenta.music.PitchHistogramPerformanceControlSignal(
                 window_size_seconds=5.0),
             magenta.music.ComposerPerformanceControlSignal(
-                composers=COMPOSER_MASTER_LIST)
+                composers=composer_master_list)
         ],
         optional_conditioning=True)
 }

@@ -27,7 +27,7 @@ from magenta.music.performance_lib import PerformanceEvent
 NOTES_PER_OCTAVE = constants.NOTES_PER_OCTAVE
 DEFAULT_NOTE_DENSITY = 15.0
 DEFAULT_PITCH_HISTOGRAM = [1.0] * NOTES_PER_OCTAVE
-DEFAULT_COMPOSER = None
+DEFAULT_COMPOSER = ''
 
 
 class PerformanceControlSignal(object):
@@ -207,12 +207,11 @@ class NoteDensityPerformanceControlSignal(PerformanceControlSignal):
       else:
         return self._density_bin_ranges[index - 1]
 
-#________________________ComposerConditioning______________
 class ComposerPerformanceControlSignal(PerformanceControlSignal):
   """Composer performance control signal."""
 
   name = 'composer'
-  description = "Composer who's style is desired."
+  description = "Name of composer to condition on"
 
   def __init__(self, composers):
     """Initialize a ComposerPerformanceControlSignal.
@@ -228,13 +227,12 @@ class ComposerPerformanceControlSignal(PerformanceControlSignal):
 
   @property
   def default_value(self):
-    return DEFAULT_COMPOSER # TODO: implement this
+    return DEFAULT_COMPOSER
 
   @property
   def encoder(self):
     return self._encoder
 
-  # TODO: implement this
   def extract(self, performance):
     """Uses the same composer for every event in performance.
 
@@ -244,17 +242,14 @@ class ComposerPerformanceControlSignal(PerformanceControlSignal):
 
     Returns:
       A list of composers the same length as `performance`, with each
-      entry equal to the composer of the performance. *********** check if there is a more
-      compact way to do this *******
+      entry equal to the composer of the performance.
     """
-    window_size_steps = int(round(
-        self._window_size_seconds * performance.steps_per_second))
 
     composer_sequence = []
 
     # TODO: Refactor to make this more efficient
     for i, event in enumerate(performance):
-      composer_sequence.append(composer)
+      composer_sequence.append(performance.composer)
 
     return composer_sequence
 
@@ -269,7 +264,7 @@ class ComposerOneHotEncoding(encoder_decoder.OneHotEncoding):
       """Initialize a NoteDensityOneHotEncoding.
 
       Args:
-        composers: List of all possible composers used in in conditioning the model
+        composers: List of all possible composers used in conditioning the model
       """
       self._composers = composers
 
@@ -279,17 +274,17 @@ class ComposerOneHotEncoding(encoder_decoder.OneHotEncoding):
 
     @property
     def default_event(self):
-      return None # TODO: check that this makes sense
+      return '' # TODO: check that this makes sense
 
     def encode_event(self, event):
       for idx, composer in enumerate(self._composers):
         if event == composer:
           return idx
-      #TODO: Handle case when composer is not found (throw exception)
+      # TODO: Handle case when composer is not found (throw exception)
 
     def decode_event(self, index):
       return self._composers[index]
-      #TODO: Handle exception
+      # TODO: Handle exception
 
 
 class PitchHistogramPerformanceControlSignal(PerformanceControlSignal):

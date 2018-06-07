@@ -30,6 +30,9 @@ import os
 # internal imports
 import tensorflow as tf
 
+# used to save master list of composers
+import json
+
 from magenta.music import abc_parser
 from magenta.music import midi_io
 from magenta.music import musicxml_reader
@@ -49,6 +52,8 @@ tf.app.flags.DEFINE_integer('num_threads', 1,
 tf.app.flags.DEFINE_string('log', 'INFO',
                            'The threshold for what messages will be logged '
                            'DEBUG, INFO, WARN, ERROR, or FATAL.')
+
+composer_master_list = ['']
 
 
 def convert_files(root_dir, sub_dir, writer, recursive=False):
@@ -114,7 +119,7 @@ def convert_files(root_dir, sub_dir, writer, recursive=False):
   for recurse_sub_dir in recurse_sub_dirs:
     convert_files(root_dir, recurse_sub_dir, writer, recursive)
 
-def extract_metadata(full_file_path):
+def extract_metadata(midi_file_path):
   """ Extracts title, artist, genre(s) and composer(s) from text file
 
   Args:
@@ -126,17 +131,36 @@ def extract_metadata(full_file_path):
 
   metadata = {title:'', artist:'', genres:'', composers:''}
 
-  extensionless_file, _ = os.path.splitext(full_file_path)
+  extensionless_file, _ = os.path.splitext(midi_file_path)
+  text_file = extensionless_file + '.txt'
 
-  with open(extensionless_file + '.txt') as file:
+  with open(text_file) as file:
     _ = file.readline() # URL
-    metadata[title] = file.readline().stripr('\n')
+    metadata[title] = file.readline().stripr('\n') # TODO: allow conditioning by title
     metadata[composers] = file.readline().stripr('\n') # TODO: allow multiple composers
-    metadata[artist] = file.readline().stripr('\n')
+    metadata[artist] = file.readline().stripr('\n') # TODO: allow conditioning by artist
 
   # Note: genre is left blank
 
+  # Update a master list of composers to be used when encoding to one-hot
+  update_composer_master_list(metadata[composers])
+
   return metadata
+
+# TODO: document this
+def update_composer_master_list(composer):
+  if composer not in composer_master_list:
+    composer_master_list.append(composer)
+
+# TODO: document this
+def  write_composer_data(note_sequence_output_file):
+
+  # use alternate output_file (the given one is for the note sequences)
+  output_file = os.path.join(os.path.dirname(note_sequence_output_file), 'composer_data.txt')
+
+  with open(output_file, 'r+') as file:
+    # Save composer_master_list as JSON
+    json.dump(composer_master_list, file)
 
 def convert_midi(root_dir, sub_dir, full_file_path, metadata=None):
   """Converts a midi file to a sequence proto.
@@ -249,6 +273,9 @@ def convert_directory(root_dir, output_file, recursive=False):
   with note_sequence_io.NoteSequenceRecordWriter(output_file) as writer:
     convert_files(root_dir, '', writer, recursive)
 
+  with open(output_file) as f:
+
+
 
 def main(unused_argv):
   tf.logging.set_verbosity(FLAGS.log)
@@ -268,6 +295,9 @@ def main(unused_argv):
     tf.gfile.MakeDirs(output_dir)
 
   convert_directory(input_dir, output_file, FLAGS.recursive)
+
+  # store composer data
+  write_composer_data(output_file)
 
 
 def console_entry_point():

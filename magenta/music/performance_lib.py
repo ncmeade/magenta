@@ -91,7 +91,7 @@ class BasePerformance(events_lib.EventSequence):
   __metaclass__ = abc.ABCMeta
 
   def __init__(self, start_step, num_velocity_bins, max_shift_steps,
-               program=None, is_drum=None, composer):
+               program=None, is_drum=None, composer=None):
     """Construct a BasePerformance.
 
     Args:
@@ -588,14 +588,13 @@ class Performance(BasePerformance):
         program=program,
         max_note_duration=max_note_duration)
 
-# TODO: Add composer arg/conditioning option here?
 class MetricPerformance(BasePerformance):
   """Performance with quarter-note relative timing."""
 
   def __init__(self, quantized_sequence=None, steps_per_quarter=None,
                start_step=0, num_velocity_bins=0,
                max_shift_quarters=DEFAULT_MAX_SHIFT_QUARTERS, instrument=None,
-               program=None, is_drum=None):
+               program=None, is_drum=None, composer=None):
     """Construct a MetricPerformance.
 
     Either quantized_sequence or steps_per_quarter should be supplied.
@@ -646,7 +645,8 @@ class MetricPerformance(BasePerformance):
         num_velocity_bins=num_velocity_bins,
         max_shift_steps=self._steps_per_quarter * max_shift_quarters,
         program=program,
-        is_drum=is_drum)
+        is_drum=is_drum,
+        composer=composer)
 
   @property
   def steps_per_quarter(self):
@@ -751,11 +751,13 @@ def extract_performances(
     if sequences_lib.is_absolute_quantized_sequence(quantized_sequence):
       performance = Performance(quantized_sequence, start_step=start_step,
                                 num_velocity_bins=num_velocity_bins,
-                                instrument=instrument)
+                                instrument=instrument,
+                                composer=quantized_sequence.sequence_metadata.composers)
     else:
       performance = MetricPerformance(quantized_sequence, start_step=start_step,
                                       num_velocity_bins=num_velocity_bins,
-                                      instrument=instrument)
+                                      instrument=instrument,
+                                      composer=quantized_sequence.sequence_metadata.composers)
 
     if (max_steps_truncate is not None and
         performance.num_steps > max_steps_truncate):
