@@ -382,10 +382,6 @@ class OneHotEventSequenceEncoderDecoder(EventSequenceEncoderDecoder):
       An input vector, a list of floats.
     """
     input_ = [0.0] * self.input_size
-
-    # TEST
-    if self._one_hot_encoding.encode_event(events[position]) is None:
-      raise ValueError('%s encode_even is returning None' % (type(self._one_hot_encoding)))
     input_[self._one_hot_encoding.encode_event(events[position])] = 1.0
     return input_
 
