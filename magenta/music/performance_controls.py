@@ -217,7 +217,7 @@ class ComposerPerformanceControlSignal(PerformanceControlSignal):
     """Initialize a ComposerPerformanceControlSignal.
 
     Args:
-      composers: List of all possible composers in for this model
+      composers: List of all possible composers for this model
     """
     self._encoder = encoder_decoder.OneHotEventSequenceEncoderDecoder(
         self.ComposerOneHotEncoding(composers))
@@ -237,8 +237,8 @@ class ComposerPerformanceControlSignal(PerformanceControlSignal):
     """Uses the same composer for every event in performance.
 
     Args:
-      performance: A Performance object for which to create composer
-          sequence.
+      performance: A Performance object to create a composer
+          sequence from.
 
     Returns:
       A list of composers the same length as `performance`, with each
@@ -253,38 +253,45 @@ class ComposerPerformanceControlSignal(PerformanceControlSignal):
 
     return composer_sequence
 
-class ComposerOneHotEncoding(encoder_decoder.OneHotEncoding):
-    """One-hot encoding for performance composer events.
+  class ComposerOneHotEncoding(encoder_decoder.OneHotEncoding):
+      """One-hot encoding for performance composer events.
 
-    Encodes composer using their corresponding index in the composers list arg. 
-    Decodes by returning the composer at the given index.
-    """
-
-    def __init__(self, composers):
-      """Initialize a NoteDensityOneHotEncoding.
-
-      Args:
-        composers: List of all possible composers used in conditioning the model
+      Encodes composer using their corresponding index in the composers list arg. 
+      Decodes by returning the composer at the given index.
       """
-      self._composers = composers
 
-    @property
-    def num_classes(self):
-      return len(self.composers)
+      def __init__(self, composers):
+        """Initialize a NoteDensityOneHotEncoding.
 
-    @property
-    def default_event(self):
-      return '' # TODO: check that this makes sense
+        Args:
+          composers: List of all possible composers used in conditioning the model
+        """
+        self._composers = composers
 
-    def encode_event(self, event):
-      for idx, composer in enumerate(self._composers):
-        if event == composer:
-          return idx
-      # TODO: Handle case when composer is not found (throw exception)
+      @property
+      def num_classes(self):
+        return len(self._composers)
 
-    def decode_event(self, index):
-      return self._composers[index]
-      # TODO: Handle exception
+      @property
+      def default_event(self):
+        return '' # TODO: check that this makes sense
+
+      def encode_event(self, event):
+
+        # concatenate event into string
+        # TODO refactor for efficiency
+        event_string = ''
+        for char in event:
+          event_string += char
+
+        for idx, composer in enumerate(self._composers):
+          if event_string == composer:
+            return idx
+        raise ValueError('list of composers :'  + str(self._composers) + str(event))
+
+      def decode_event(self, index):
+        return self._composers[index]
+        # TODO: Handle exceptions
 
 
 class PitchHistogramPerformanceControlSignal(PerformanceControlSignal):

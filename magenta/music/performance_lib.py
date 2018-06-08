@@ -135,6 +135,10 @@ class BasePerformance(events_lib.EventSequence):
   def is_drum(self):
     return self._is_drum
 
+  @property
+  def composer(self):
+    return self._composer
+
   def _append_steps(self, num_steps):
     """Adds steps to the end of the sequence."""
     if (self._events and

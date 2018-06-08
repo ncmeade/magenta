@@ -172,6 +172,8 @@ def get_pipeline(config, min_events, max_events, eval_ratio):
 def main(unused_argv):
   tf.logging.set_verbosity(FLAGS.log)
 
+  # TODO: Read composer master list?
+
   pipeline_instance = get_pipeline(
       min_events=32,
       max_events=512,

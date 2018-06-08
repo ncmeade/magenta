@@ -21,13 +21,17 @@ import functools
 import tensorflow as tf
 import magenta
 
+# Used for composer master list
+import json
+
 from magenta.models.shared import events_rnn_model
 from magenta.music.performance_lib import PerformanceEvent
 
 # TODO: make this less hacky
 # TODO: include the file path before running
 # Master list of composers in current model
-composer_master_list = json.load("file path goes here")
+with open('/tmp/composer_metadata.json', 'r') as file:
+  composer_master_list = json.load(file)
 
 # State for constructing a time-varying control sequence. Keeps track of the
 # current event position and time step in the generated performance, to allow
