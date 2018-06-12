@@ -120,7 +120,18 @@ def convert_files(root_dir, sub_dir, writer, recursive=False):
     convert_files(root_dir, recurse_sub_dir, writer, recursive)
 
 def extract_metadata(midi_file_path):
-  """ Extracts title, artist, genre(s) and composer(s) from text file
+  """ Extracts title, artist, genre(s) and composer(s) from text file.
+
+  The text file is assumed to be located in the same directory as its
+  corresponding MIDI file. It is also assumed to have the same file name
+  only it ends with a .txt extension.
+
+  The format of the text files containing metadata is as follows:
+  [url]
+  [title]
+  [composer]
+  [performer]
+  [performer's nationality]
 
   Args:
     full_file_path: the full path to the corresponding MIDI file.
