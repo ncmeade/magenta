@@ -14,7 +14,7 @@ fi
 PROCESSES=$1
 INPUT_DIRECTORY=$2
 OUTPUT_DIRECTORY=$3
-TEMP_DIR=/tmp/temp_script_files
+TEMP_DIR=~/temp_script_files
 TEMP_DIR_IN=$TEMP_DIR/all_inputs
 TEMP_DIR_OUT=$TEMP_DIR/all_outputs
 TEMP_DIR_OUT_NS=$TEMP_DIR_OUT/all_notesequences
@@ -55,7 +55,6 @@ do
 done
 
 
-cd # Change to home dir
 i=0
 
 
