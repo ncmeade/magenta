@@ -167,9 +167,9 @@ def update_composer_master_list(composer):
 def  write_composer_data(note_sequence_output_file):
 
   # use alternate output_file (the given one is for the note sequences)
-  output_file = os.path.join(os.path.dirname(note_sequence_output_file), 'composer_metadata.json')
+  #output_file = os.path.join(os.path.dirname('/tmp'), 'composer_metadata.json')
 
-  with open(output_file, 'w+') as file:
+  with open('/tmp/composer_metadata.json', 'w+') as file:
     # Save composer_master_list as JSON
     json.dump(composer_master_list, file)
 
