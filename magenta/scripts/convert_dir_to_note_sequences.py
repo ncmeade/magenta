@@ -55,7 +55,6 @@ tf.app.flags.DEFINE_string('log', 'INFO',
 
 composer_master_list = ['']
 
-
 def convert_files(root_dir, sub_dir, writer, recursive=False):
   """Converts files.
 
@@ -164,12 +163,11 @@ def update_composer_master_list(composer):
     composer_master_list.append(composer)
 
 # TODO: document this
-def  write_composer_data(note_sequence_output_file):
+def  write_composer_data(file_num):
 
   # use alternate output_file (the given one is for the note sequences)
-  #output_file = os.path.join(os.path.dirname('/tmp'), 'composer_metadata.json')
 
-  with open('/tmp/composer_metadata.json', 'w+') as file:
+  with open('/tmp/composer_metadata{}.json'.format(file_num), 'w+') as file:
     # Save composer_master_list as JSON
     json.dump(composer_master_list, file)
 
@@ -308,7 +306,8 @@ def main(unused_argv):
   convert_directory(input_dir, output_file, FLAGS.recursive)
 
   # store composer data
-  write_composer_data(output_file)
+  #TODO: make this less of a hack
+  write_composer_data(FLAGS.num_threads)
 
 
 def console_entry_point():

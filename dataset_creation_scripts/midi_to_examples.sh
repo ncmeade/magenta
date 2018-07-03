@@ -35,6 +35,9 @@ mkdir $TEMP_DIR_OUT
 mkdir $TEMP_DIR_OUT_NS 
 mkdir $TEMP_DIR_OUT_EX
 
+# Make a directory for output
+mkdir $OUTPUT_DIRECTORY/sequenceexamples
+
 declare i=0
 
 # Create n temporary directories
@@ -46,34 +49,52 @@ done
 
 # Disperse hardlinks to all MIDIs evenly between the temp fils
 i=0
+FILE_NUM=0
 
-for FILE in $INPUT_DIRECTORY/*.mid
+for FILE in $INPUT_DIRECTORY/*
 do
-	ln $FILE $TEMP_DIR_IN/inputs$(( i % PROCESSES ))/`basename "$FILE"`
-
-	(( i++ ))
+	if [ -d "${FILE}" ]; then
+		for FILE_ in $FILE/*.mid
+		do
+			NAME=$( basename "$FILE_" .mid ) 
+                	ln ${FILE}/${NAME}.mid $TEMP_DIR_IN/inputs$(( i % PROCESSES ))/${FILE_NUM}.mid
+                	ln ${FILE}/${NAME}.txt $TEMP_DIR_IN/inputs$(( i % PROCESSES ))/${FILE_NUM}.txt
+                	(( i++ ))
+			(( FILE_NUM++ ))
+		done
+	elif [ ${FILE: -4} == ".txt" ]; then
+        	continue # Skip text files
+	else
+		NAME=$( basename "$FILE" .mid )
+        	ln ${INPUT_DIRECTORY}/${NAME}.mid $TEMP_DIR_IN/inputs$(( i % PROCESSES ))/${FILE_NUM}.mid
+        	ln ${INPUT_DIRECTORY}/${NAME}.txt $TEMP_DIR_IN/inputs$(( i % PROCESSES ))/${FILE_NUM}.txt
+		(( i++ ))
+		(( FILE_NUM++ ))
+	fi
 done
 
+echo $FILE_NUM MIDIs have been identified . . .
 
 i=0
-
 
 # Convert MIDIs in each temp file to notesequence TF-records
 echo "Creating notesequences . . ."
 while (( $i < $PROCESSES )); do
-	./dataset_creation_scripts/midi_to_tfrecord.sh $TEMP_DIR_IN/inputs${i} $TEMP_DIR_OUT_NS/notesequences${i}.tfrecord
+	# Note: this runs in the background
+	./dataset_creation_scripts/midi_to_tfrecord.sh $TEMP_DIR_IN/inputs${i} $TEMP_DIR_OUT_NS/notesequences${i}.tfrecord ${i}&
 
 	(( i++ ))
 done
+
+wait
 
 i=0
 
 # Convert notesequences to sequence examples
 echo "Creating sequenceexamples . . ."
 while (( $i < $PROCESSES )); do
-
 	# Note: this runs in the background
-	./dataset_creation_scripts/tfrecord_to_examples.sh $TEMP_DIR_OUT_NS/notesequences${i}.tfrecord $TEMP_DIR_OUT_EX/sequenceexamples${i}&
+	./dataset_creation_scripts/tfrecord_to_examples.sh $TEMP_DIR_OUT_NS/notesequences${i}.tfrecord $TEMP_DIR_OUT_EX/sequenceexamples${i} ${i}&
 
 	(( i++ ))
 done
@@ -84,24 +105,18 @@ wait
 echo "Concatenating sequenceexamples . . ."
 
 # Copy the first training and eval tf records to destination dir
-cp -r $TEMP_DIR_OUT_EX/sequenceexamples0/ $OUTPUT_DIRECTORY
+cp $TEMP_DIR_OUT_EX/sequenceexamples0/* $OUTPUT_DIRECTORY/sequenceexamples
 
 i=1
 
 while (( $i < $PROCESSES )); do
 
-	cat $TEMP_DIR_OUT_EX/sequenceexamples${i}/training_performances.tfrecord >> $OUTPUT_DIRECTORY/training_performances.tfrecord
-	cat $TEMP_DIR_OUT_EX/sequenceexamples${i}/eval_performances.tfrecord >> $OUTPUT_DIRECTORY/eval_performances.tfrecord
+	cat $TEMP_DIR_OUT_EX/sequenceexamples${i}/training_performances.tfrecord >> $OUTPUT_DIRECTORY/sequenceexamples/training_performances.tfrecord
+	cat $TEMP_DIR_OUT_EX/sequenceexamples${i}/eval_performances.tfrecord >> $OUTPUT_DIRECTORY/sequenceexamples/eval_performances.tfrecord
 
 	(( i++ ))
 done
 
 # Clean up
-rm -r $TEMP_DIR
-rm ~/magenta/nohup.out
-
-
-
-
-
-
+#rm -r $TEMP_DIR
+#rm ~/magenta/nohup.out

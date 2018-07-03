@@ -23,15 +23,28 @@ import magenta
 
 # Used for composer master list
 import json
+import glob
 
 from magenta.models.shared import events_rnn_model
 from magenta.music.performance_lib import PerformanceEvent
 
 # TODO: make this less hacky
-# TODO: include the file path before running
 # Master list of composers in current model
-with open('/tmp/composer_metadata.json', 'r') as file:
-  composer_master_list = json.load(file)
+
+composer_master_list = []
+composer_list_paths = glob.glob('/tmp/composer_metadata*.json')
+for path in composer_list_paths: 
+  with open(path, 'r') as file:
+    composer_list = json.load(file)
+  for composer in composer_list:
+    if composer not in composer_master_list:
+      composer_master_list.append(composer)
+
+composer_master_list.sort()
+
+with open('/tmp/composer_metadata_master.json', 'w+') as file:
+    # Save composer_master_list as JSON so it can be inspected
+    json.dump(composer_master_list, file)
 
 # State for constructing a time-varying control sequence. Keeps track of the
 # current event position and time step in the generated performance, to allow

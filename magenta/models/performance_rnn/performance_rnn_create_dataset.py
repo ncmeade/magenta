@@ -48,6 +48,8 @@ tf.app.flags.DEFINE_float('eval_ratio', 0.1,
 tf.app.flags.DEFINE_string('log', 'INFO',
                            'The threshold for what messages will be logged '
                            'DEBUG, INFO, WARN, ERROR, or FATAL.')
+tf.app.flags.DEFINE_integer('num_threads', 1,
+                            'Number of worker threads to run in parallel.')
 
 
 class EncoderPipeline(pipeline.Pipeline):
