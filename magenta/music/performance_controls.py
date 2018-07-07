@@ -53,7 +53,7 @@ with open('/tmp/composer_metadata_master.json', 'w+') as file:
 
 COMPOSERS = composer_master_list
 DEFAULT_COMPOSER = ''
-DEFAULT_COMPOSER_HISTOGRAM = [(composer, 0.0) for composer in COMPOSERS]
+DEFAULT_COMPOSER_HISTOGRAM = [0.0] * len(COMPOSERS)
 
 
 
@@ -369,11 +369,13 @@ class ComposerHistogramPerformanceControlSignal(PerformanceControlSignal):
 
       # weight each of the composers equally in the histogram
       weight = 1.0 / len(composer_list)
+      default_weight = 0.0
+
       histogram = []
 
-      for composer, default_weight in DEFAULT_COMPOSER_HISTOGRAM:
+      for composer in COMPOSERS:
         if composer in composer_list:
-          histogram.append(weight) # new weights. sum to 1.0
+          histogram.append(weight) # new weights. sum to 1.0. all equal.
         else:
           histogram.append(default_weight) # currently 0.0
 
