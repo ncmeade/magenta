@@ -19,6 +19,10 @@ import abc
 import copy
 import numbers
 
+# Used for composer master list
+import json
+import glob
+
 # internal imports
 from magenta.music import constants
 from magenta.music import encoder_decoder
@@ -27,7 +31,30 @@ from magenta.music.performance_lib import PerformanceEvent
 NOTES_PER_OCTAVE = constants.NOTES_PER_OCTAVE
 DEFAULT_NOTE_DENSITY = 15.0
 DEFAULT_PITCH_HISTOGRAM = [1.0] * NOTES_PER_OCTAVE
+
+
+# TODO: make this less hacky
+# Master list of composers in current model
+
+composer_master_list = []
+composer_list_paths = glob.glob('/tmp/composer_metadata*.json')
+for path in composer_list_paths: 
+  with open(path, 'r') as file:
+    composer_list = json.load(file)
+  for composer in composer_list:
+    if composer not in composer_master_list:
+      composer_master_list.append(composer)
+
+composer_master_list.sort()
+
+with open('/tmp/composer_metadata_master.json', 'w+') as file:
+    # Save composer_master_list as JSON so it can be inspected
+    json.dump(composer_master_list, file)
+
+COMPOSERS = composer_master_list
 DEFAULT_COMPOSER = ''
+DEFAULT_COMPOSER_HISTOGRAM = [(composer, 0.0) for composer in COMPOSERS]
+
 
 
 class PerformanceControlSignal(object):
@@ -249,7 +276,7 @@ class ComposerPerformanceControlSignal(PerformanceControlSignal):
 
     # TODO: Refactor to make this more efficient
     for i, event in enumerate(performance):
-      composer_sequence.append(performance.composer)
+      composer_sequence.append(performance.composers[0])
 
     return composer_sequence
 
@@ -287,12 +314,96 @@ class ComposerPerformanceControlSignal(PerformanceControlSignal):
         for idx, composer in enumerate(self._composers):
           if event_string == composer:
             return idx
-        raise ValueError('list of composers :'  + str(self._composers) + str(event))
+        raise ValueError('list of composers :' + str(self._composers) + str(event))
 
       def decode_event(self, index):
         return self._composers[index]
         # TODO: Handle exceptions
 
+class ComposerHistogramPerformanceControlSignal(PerformanceControlSignal):
+  """Composer class histogram performance control signal."""
+
+  name = 'composer_class_histogram'
+  description = "Desired weight for each for each composer"
+
+  def __init__(self, composers):
+    """Initializes a ComposerHistogramPerformanceControlSignal.
+
+    Args:
+      composers: List of all possible composers for this model
+    """
+    self._composers = composers
+    self._encoder = self.ComposerHistogramEncoder()
+
+  @property
+  def default_value(self):
+    return DEFAULT_COMPOSER_HISTOGRAM
+
+  def validate(self, value):
+    return (isinstance(value, list) and len(value) == len(COMPOSERS) and
+            all(composer in COMPOSERS and isinstance(val, numbers.Number) for composer, val in value))
+
+  @property
+  def encoder(self):
+    return self._encoder
+
+  def extract(self, performance):
+    """Creates composer class histogram at every event in a performance.
+
+    Args:
+      performance: A Performance object for which to create a composer class
+          histogram sequence.
+
+    Returns:
+      A list of composer class histograms the same length as `performance`, where
+      each composer class histogram is the length of the composer master-list of float values. 
+      The values sum to one.
+    """
+
+    histogram_sequence = []
+
+    for i, event in enumerate(performance):
+
+      # get list of composers for the given performance
+      composer_list = performance.composers
+
+      # weight each of the composers equally in the histogram
+      weight = 1.0 / len(composer_list)
+      histogram = []
+
+      for composer, default_weight in DEFAULT_COMPOSER_HISTOGRAM:
+        if composer in composer_list:
+          histogram.append(weight) # new weights. sum to 1.0
+        else:
+          histogram.append(default_weight) # currently 0.0
+
+      histogram_sequence.append(histogram)
+
+    return histogram_sequence
+
+  class ComposerHistogramEncoder(encoder_decoder.EventSequenceEncoderDecoder):
+    """An encoder for composer class histogram sequences."""
+
+    @property
+    def input_size(self):
+      return len(DEFAULT_COMPOSER_HISTOGRAM)
+
+    @property
+    def num_classes(self):
+      raise NotImplementedError
+
+    @property
+    def default_event_label(self):
+      raise NotImplementedError
+
+    def events_to_input(self, events, position):
+      return events[position] # TODO: double check this
+
+    def events_to_label(self, events, position):
+      raise NotImplementedError
+
+    def class_index_to_event(self, class_index, events):
+      raise NotImplementedError
 
 class PitchHistogramPerformanceControlSignal(PerformanceControlSignal):
   """Pitch class histogram performance control signal."""
@@ -421,5 +532,6 @@ class PitchHistogramPerformanceControlSignal(PerformanceControlSignal):
 all_performance_control_signals = [
     NoteDensityPerformanceControlSignal,
     PitchHistogramPerformanceControlSignal,
-    ComposerPerformanceControlSignal
+    ComposerPerformanceControlSignal,
+    ComposerHistogramPerformanceControlSignal
 ]

@@ -138,7 +138,6 @@ def extract_metadata(midi_file_path):
   Returns:
     A dictionary of metadata corresponding to the MIDI file
   """
-
   metadata = {'title':'', 'artist':'', 'genres':'', 'composers':''}
 
   extensionless_file, _ = os.path.splitext(midi_file_path)
@@ -147,7 +146,7 @@ def extract_metadata(midi_file_path):
   with open(text_file) as file:
     _ = file.readline() # URL
     metadata['title'] = file.readline().rstrip('\n') # TODO: allow conditioning by title
-    metadata['composers'] = file.readline().rstrip('\n') # TODO: allow multiple composers
+    metadata['composers'] = file.readline().rstrip('\n').split('/') # TODO: allow multiple composers
     metadata['artist'] = file.readline().rstrip('\n') # TODO: allow conditioning by artist
 
   # Note: genre is left blank
@@ -158,9 +157,10 @@ def extract_metadata(midi_file_path):
   return metadata
 
 # TODO: document this
-def update_composer_master_list(composer):
-  if composer not in composer_master_list:
-    composer_master_list.append(composer)
+def update_composer_master_list(composers):
+  for composer in composers:
+    if composer not in composer_master_list:
+      composer_master_list.append(composer)
 
 # TODO: document this
 def  write_composer_data(file_num):
@@ -184,6 +184,7 @@ def convert_midi(root_dir, sub_dir, full_file_path, metadata=None):
   Returns:
     Either a NoteSequence proto or None if the file could not be converted.
   """
+  
   try:
     sequence = midi_io.midi_to_sequence_proto(
         tf.gfile.FastGFile(full_file_path, 'rb').read(),
@@ -193,6 +194,7 @@ def convert_midi(root_dir, sub_dir, full_file_path, metadata=None):
         'Could not parse MIDI file %s. It will be skipped. Error was: %s',
         full_file_path, e)
     return None
+  
   sequence.collection_name = os.path.basename(root_dir)
   sequence.filename = os.path.join(sub_dir, os.path.basename(full_file_path))
   sequence.id = note_sequence_io.generate_note_sequence_id(
@@ -279,11 +281,12 @@ def convert_directory(root_dir, output_file, recursive=False):
     recursive: A boolean specifying whether or not recursively convert files
         contained in subdirectories of the specified directory.
   """
+
   with note_sequence_io.NoteSequenceRecordWriter(output_file) as writer:
     convert_files(root_dir, '', writer, recursive)
-
   with open(output_file) as f:
     pass
+
 
 
 def main(unused_argv):

@@ -42,6 +42,9 @@ DEFAULT_MAX_SHIFT_QUARTERS = 4
 
 DEFAULT_PROGRAM = 0
 
+# TODO: read composer field from music.proto as a list of composers
+# TODO: create note sequences with multiple composers
+
 
 class PerformanceEvent(object):
   """Class for storing events in a performance."""
@@ -91,7 +94,7 @@ class BasePerformance(events_lib.EventSequence):
   __metaclass__ = abc.ABCMeta
 
   def __init__(self, start_step, num_velocity_bins, max_shift_steps,
-               program=None, is_drum=None, composer=None):
+               program=None, is_drum=None, composers=None):
     """Construct a BasePerformance.
 
     Args:
@@ -102,7 +105,7 @@ class BasePerformance(events_lib.EventSequence):
       program: MIDI program used for this performance, or None if not specified.
       is_drum: Whether or not this performance consists of drums, or None if not
           specified.
-      composer: Last name of the person who composed the performance
+      composers: List of composers
 
     Raises:
       ValueError: If `num_velocity_bins` is larger than the number of MIDI
@@ -117,7 +120,7 @@ class BasePerformance(events_lib.EventSequence):
     self._max_shift_steps = max_shift_steps
     self._program = program
     self._is_drum = is_drum
-    self._composer = composer
+    self._composers = composers
 
   @property
   def start_step(self):
@@ -136,8 +139,8 @@ class BasePerformance(events_lib.EventSequence):
     return self._is_drum
 
   @property
-  def composer(self):
-    return self._composer
+  def composers(self):
+    return self._composers
 
   def _append_steps(self, num_steps):
     """Adds steps to the end of the sequence."""
@@ -506,7 +509,7 @@ class Performance(BasePerformance):
   def __init__(self, quantized_sequence=None, steps_per_second=None,
                start_step=0, num_velocity_bins=0,
                max_shift_steps=DEFAULT_MAX_SHIFT_STEPS, instrument=None,
-               program=None, is_drum=None, composer=None):
+               program=None, is_drum=None, composers=None):
     """Construct a Performance.
 
     Either quantized_sequence or steps_per_second should be supplied.
@@ -527,7 +530,7 @@ class Performance(BasePerformance):
           Ignored if `quantized_sequence` is provided.
       is_drum: Whether or not this performance consists of drums, or None if not
           specified. Ignored if `quantized_sequence` is provided.
-      composer: Last name of the person who composed the performance
+      composers: List of composers
 
     Raises:
       ValueError: If both or neither of `quantized_sequence` or
@@ -557,7 +560,7 @@ class Performance(BasePerformance):
         max_shift_steps=max_shift_steps,
         program=program,
         is_drum=is_drum,
-        composer=composer)
+        composers=composers)
 
   @property
   def steps_per_second(self):
@@ -598,7 +601,7 @@ class MetricPerformance(BasePerformance):
   def __init__(self, quantized_sequence=None, steps_per_quarter=None,
                start_step=0, num_velocity_bins=0,
                max_shift_quarters=DEFAULT_MAX_SHIFT_QUARTERS, instrument=None,
-               program=None, is_drum=None, composer=None):
+               program=None, is_drum=None, composers=None):
     """Construct a MetricPerformance.
 
     Either quantized_sequence or steps_per_quarter should be supplied.
@@ -650,7 +653,7 @@ class MetricPerformance(BasePerformance):
         max_shift_steps=self._steps_per_quarter * max_shift_quarters,
         program=program,
         is_drum=is_drum,
-        composer=composer)
+        composers=composers)
 
   @property
   def steps_per_quarter(self):
@@ -756,12 +759,12 @@ def extract_performances(
       performance = Performance(quantized_sequence, start_step=start_step,
                                 num_velocity_bins=num_velocity_bins,
                                 instrument=instrument,
-                                composer=quantized_sequence.sequence_metadata.composers)
+                                composers=quantized_sequence.sequence_metadata.composers)
     else:
       performance = MetricPerformance(quantized_sequence, start_step=start_step,
                                       num_velocity_bins=num_velocity_bins,
                                       instrument=instrument,
-                                      composer=quantized_sequence.sequence_metadata.composers)
+                                      composers=quantized_sequence.sequence_metadata.composers)
 
     if (max_steps_truncate is not None and
         performance.num_steps > max_steps_truncate):
