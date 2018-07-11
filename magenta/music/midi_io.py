@@ -99,8 +99,7 @@ def midi_to_sequence_proto(midi_data, metadata=None):
     sequence.sequence_metadata.artist = metadata['artist']
     # TODO: include genre
     #sequence.sequence_metadata.genre = metadata['genre']
-    for composer in metadata['composers']:
-      sequence.sequence_metadata.composers.extend(composer)
+    sequence.sequence_metadata.composers.extend(str(metadata['composers']))
 
   # Populate time signatures.
   for midi_time in midi.time_signature_changes:
