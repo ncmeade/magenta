@@ -9,7 +9,7 @@ fi
 NOTESEQUENCES_FILE=$1
 OUTPUT_DIRECTORY=$2
 FILE_NUM=$3
-CONFIG=composer_conditioned_performance_with_dynamics
+CONFIG=multi_composer_conditioned_performance_with_dynamics
 
 cd ~/magenta
 source activate magenta

@@ -18,6 +18,7 @@ from __future__ import division
 import abc
 import copy
 import numbers
+import ast
 
 # Used for composer master list
 import json
@@ -365,14 +366,19 @@ class ComposerHistogramPerformanceControlSignal(PerformanceControlSignal):
     for i, event in enumerate(performance):
 
       # get list of composers for the given performance
-      composer_list = performance.composers
+      composer_list_str = ''
+      for char in performance.composers:
+        composer_list_str += char
+
+      # parse string representation of list as a list
+      composer_list = ast.literal_eval(composer_list_str)
 
       # weight each of the composers equally in the histogram
-      weight = 1.0 / len(composer_list)
+      weight = 1.0 / len(composer_list) 
       default_weight = 0.0
 
       histogram = []
-
+      
       for composer in COMPOSERS:
         if composer in composer_list:
           histogram.append(weight) # new weights. sum to 1.0. all equal.
