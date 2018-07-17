@@ -37,26 +37,29 @@ DEFAULT_PITCH_HISTOGRAM = [1.0] * NOTES_PER_OCTAVE
 # TODO: make this less hacky
 # Master list of composers in current model
 
-composer_master_list = []
-composer_list_paths = glob.glob('/tmp/composer_metadata*.json')
-for path in composer_list_paths: 
-  with open(path, 'r') as file:
-    composer_list = json.load(file)
-  for composer in composer_list:
-    if composer not in composer_master_list:
-      composer_master_list.append(composer)
+#composer_master_list = []
+#composer_list_paths = glob.glob('/tmp/composer_metadata*.json')
+#for path in composer_list_paths: 
+#  with open(path, 'r') as file:
+#    composer_list = json.load(file)
+#  for composer in composer_list:
+#    if composer not in composer_master_list:
+#      composer_master_list.append(composer)
+
+#composer_master_list.sort()
+
+#with open('/tmp/composer_metadata_master.json', 'w+') as file:
+#    # Save composer_master_list as JSON so it can be inspected
+#    json.dump(composer_master_list, file)
+
+with open('/tmp/composer_metadata_master.json', 'r') as file:
+  composer_master_list = json.load(file)
 
 composer_master_list.sort()
-
-with open('/tmp/composer_metadata_master.json', 'w+') as file:
-    # Save composer_master_list as JSON so it can be inspected
-    json.dump(composer_master_list, file)
 
 COMPOSERS = composer_master_list
 DEFAULT_COMPOSER = ''
 DEFAULT_COMPOSER_HISTOGRAM = [0.0] * len(COMPOSERS)
-
-
 
 class PerformanceControlSignal(object):
   """Control signal used for conditional generation of performances.
@@ -342,7 +345,7 @@ class ComposerHistogramPerformanceControlSignal(PerformanceControlSignal):
 
   def validate(self, value):
     return (isinstance(value, list) and len(value) == len(COMPOSERS) and
-            all(composer in COMPOSERS and isinstance(val, numbers.Number) for composer, val in value))
+            all(isinstance(val, numbers.Number) for val in value))
 
   @property
   def encoder(self):
