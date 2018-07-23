@@ -32,6 +32,7 @@ from magenta.music.performance_lib import PerformanceEvent
 NOTES_PER_OCTAVE = constants.NOTES_PER_OCTAVE
 DEFAULT_NOTE_DENSITY = 15.0
 DEFAULT_PITCH_HISTOGRAM = [1.0] * NOTES_PER_OCTAVE
+DEFAULT_SIGNATURE_HISTOGRAM = [0.0, 0.0, 0.0]
 
 
 # TODO: make this less hacky
@@ -51,15 +52,18 @@ DEFAULT_PITCH_HISTOGRAM = [1.0] * NOTES_PER_OCTAVE
 #with open('/tmp/composer_metadata_master.json', 'w+') as file:
 #    # Save composer_master_list as JSON so it can be inspected
 #    json.dump(composer_master_list, file)
+try:
+  with open('/tmp/composer_metadata_master.json', 'r') as file:
+    composer_master_list = json.load(file)
 
-with open('/tmp/composer_metadata_master.json', 'r') as file:
-  composer_master_list = json.load(file)
+  composer_master_list.sort()
 
-composer_master_list.sort()
+  COMPOSERS = composer_master_list
+  DEFAULT_COMPOSER = ''
+  DEFAULT_COMPOSER_HISTOGRAM = [0.0] * len(COMPOSERS)
+except:
+  print('WARNING: composer master list not found')
 
-COMPOSERS = composer_master_list
-DEFAULT_COMPOSER = ''
-DEFAULT_COMPOSER_HISTOGRAM = [0.0] * len(COMPOSERS)
 
 class PerformanceControlSignal(object):
   """Control signal used for conditional generation of performances.
@@ -332,6 +336,105 @@ class ComposerHistogramPerformanceControlSignal(PerformanceControlSignal):
     def class_index_to_event(self, class_index, events):
       raise NotImplementedError
 
+class SignatureHistogramPerformanceControlSignal(PerformanceControlSignal):
+  """Time signature class histogram performance control signal. Current 
+  implementation only distinguishes between even, odd and n/a numerator for
+  the time signature."""
+
+  name = 'signature_class_histogram'
+  description = "Desired weight for each time signature bin"
+
+  def __init__(self):
+    """Initializes a SignatureHistogramPerformanceControlSignal.
+
+    Args:
+      
+    """
+    self._encoder = self.SignatureHistogramEncoder()
+
+  @property
+  def default_value(self):
+    return DEFAULT_SIGNATURE_HISTOGRAM
+
+  def validate(self, value):
+    return (isinstance(value, list) and len(value) == len(DEFAULT_SIGNATURE_HISTOGRAM) and
+            all(isinstance(val, numbers.Number) for val in value))
+
+  @property
+  def encoder(self):
+    return self._encoder
+
+  def extract(self, performance, epsilon=1e-4):
+    """Creates signature class histogram at every event in a performance.
+
+    Args:
+      performance: A Performance object for which to create a signature class
+          histogram sequence.
+      epsilon: small value used to add degree of uncertainty about time signature
+
+    Returns:
+      A list of signature class histograms the same length as `performance`, where
+      each signature class histogram is the length of the default signature histogram
+      of float values. 
+
+      The values sum to one.
+    """
+
+    histogram_sequence = []
+
+    for i, event in enumerate(performance):
+
+      # get signature for the given performance
+      signature_str = ''
+      for char in performance.sig_numerator:
+        signature_str += char
+
+      # get literal
+      signature_numerator = ast.literal_eval(signature_str)
+      print(signature_numerator)
+      
+      if signature_numerator is None:
+        # time signature not known
+        histogram = [1.0 - 2 * epsilon, epsilon, epsilon]
+
+      elif int(signature_numerator) % 2: 
+        # time signature is odd
+        histogram = [epsilon, epsilon, 1 - 2 * epsilon]
+      else:
+        # time signature is even
+        histogram = [epsilon, 1 - 2 * epsilon, epsilon]
+
+      histogram_sequence.append(histogram)
+
+      print('histogram')
+      print(histogram)
+
+    return histogram_sequence
+
+  class SignatureHistogramEncoder(encoder_decoder.EventSequenceEncoderDecoder):
+    """An encoder for composer class histogram sequences."""
+
+    @property
+    def input_size(self):
+      return len(DEFAULT_SIGNATURE_HISTOGRAM)
+
+    @property
+    def num_classes(self):
+      raise NotImplementedError
+
+    @property
+    def default_event_label(self):
+      raise NotImplementedError
+
+    def events_to_input(self, events, position):
+      return events[position] # TODO: double check this
+
+    def events_to_label(self, events, position):
+      raise NotImplementedError
+
+    def class_index_to_event(self, class_index, events):
+      raise NotImplementedError
+
 class PitchHistogramPerformanceControlSignal(PerformanceControlSignal):
   """Pitch class histogram performance control signal."""
 
@@ -459,5 +562,6 @@ class PitchHistogramPerformanceControlSignal(PerformanceControlSignal):
 all_performance_control_signals = [
     NoteDensityPerformanceControlSignal,
     PitchHistogramPerformanceControlSignal,
-    ComposerHistogramPerformanceControlSignal
+    ComposerHistogramPerformanceControlSignal,
+    SignatureHistogramPerformanceControlSignal
 ]

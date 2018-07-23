@@ -131,6 +131,7 @@ def extract_metadata(midi_file_path):
   [composer]
   [performer]
   [performer's nationality]
+  [time signature numerator]
 
   Args:
     full_file_path: the full path to the corresponding MIDI file.
@@ -138,7 +139,7 @@ def extract_metadata(midi_file_path):
   Returns:
     A dictionary of metadata corresponding to the MIDI file
   """
-  metadata = {'title':'', 'artist':'', 'genres':'', 'composers':''}
+  metadata = {'title':'', 'artist':'', 'genres':'', 'composers':'', 'signature numerator': ''}
 
   extensionless_file, _ = os.path.splitext(midi_file_path)
   text_file = extensionless_file + '.txt'
@@ -146,8 +147,11 @@ def extract_metadata(midi_file_path):
   with open(text_file) as file:
     _ = file.readline() # URL
     metadata['title'] = file.readline().rstrip('\n') # TODO: allow conditioning by title
-    metadata['composers'] = file.readline().rstrip('\n').split('/') # TODO: allow multiple composers
+    metadata['composers'] = file.readline().rstrip('\n').split('/')
     metadata['artist'] = file.readline().rstrip('\n') # TODO: allow conditioning by artist
+    _ = file.readline() # Nationality
+    metadata['signature numerator'] = file.readline().rstrip('\n')
+
 
   # Note: genre is left blank
 

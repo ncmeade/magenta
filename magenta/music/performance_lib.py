@@ -94,7 +94,7 @@ class BasePerformance(events_lib.EventSequence):
   __metaclass__ = abc.ABCMeta
 
   def __init__(self, start_step, num_velocity_bins, max_shift_steps,
-               program=None, is_drum=None, composers=None):
+               program=None, is_drum=None, composers=None, sig_numerator=None):
     """Construct a BasePerformance.
 
     Args:
@@ -106,6 +106,7 @@ class BasePerformance(events_lib.EventSequence):
       is_drum: Whether or not this performance consists of drums, or None if not
           specified.
       composers: List of composers
+      sig_numerator: Numerator of the time
 
     Raises:
       ValueError: If `num_velocity_bins` is larger than the number of MIDI
@@ -121,6 +122,7 @@ class BasePerformance(events_lib.EventSequence):
     self._program = program
     self._is_drum = is_drum
     self._composers = composers
+    self._sig_numerator = sig_numerator
 
   @property
   def start_step(self):
@@ -142,6 +144,10 @@ class BasePerformance(events_lib.EventSequence):
   def composers(self):
     return self._composers
 
+  @property
+  def sig_numerator(self):
+    return self._sig_numerator
+  
   def _append_steps(self, num_steps):
     """Adds steps to the end of the sequence."""
     if (self._events and
@@ -509,7 +515,7 @@ class Performance(BasePerformance):
   def __init__(self, quantized_sequence=None, steps_per_second=None,
                start_step=0, num_velocity_bins=0,
                max_shift_steps=DEFAULT_MAX_SHIFT_STEPS, instrument=None,
-               program=None, is_drum=None, composers=None):
+               program=None, is_drum=None, composers=None, sig_numerator=None):
     """Construct a Performance.
 
     Either quantized_sequence or steps_per_second should be supplied.
@@ -531,6 +537,7 @@ class Performance(BasePerformance):
       is_drum: Whether or not this performance consists of drums, or None if not
           specified. Ignored if `quantized_sequence` is provided.
       composers: List of composers
+      sig_numerator: Numerator of the time signature
 
     Raises:
       ValueError: If both or neither of `quantized_sequence` or
@@ -560,7 +567,8 @@ class Performance(BasePerformance):
         max_shift_steps=max_shift_steps,
         program=program,
         is_drum=is_drum,
-        composers=composers)
+        composers=composers,
+        sig_numerator=sig_numerator)
 
   @property
   def steps_per_second(self):
@@ -759,12 +767,14 @@ def extract_performances(
       performance = Performance(quantized_sequence, start_step=start_step,
                                 num_velocity_bins=num_velocity_bins,
                                 instrument=instrument,
-                                composers=quantized_sequence.sequence_metadata.composers)
+                                composers=quantized_sequence.sequence_metadata.composers,
+                                sig_numerator=quantized_sequence.sequence_metadata.sig_numerator)
     else:
       performance = MetricPerformance(quantized_sequence, start_step=start_step,
                                       num_velocity_bins=num_velocity_bins,
                                       instrument=instrument,
-                                      composers=quantized_sequence.sequence_metadata.composers)
+                                      composers=quantized_sequence.sequence_metadata.composers,
+                                      sig_numerator=quantized_sequence.sequence_metadata.sig_numerator)
 
     if (max_steps_truncate is not None and
         performance.num_steps > max_steps_truncate):

@@ -93,14 +93,15 @@ def midi_to_sequence_proto(midi_data, metadata=None):
   sequence.source_info.encoding_type = (
       music_pb2.NoteSequence.SourceInfo.MIDI)
 
-  # Poplulate metadata
+  # Populate metadata
   if metadata is not None:
     sequence.sequence_metadata.title = metadata['title']
     sequence.sequence_metadata.artist = metadata['artist']
     # TODO: include genre
     #sequence.sequence_metadata.genre = metadata['genre']
     sequence.sequence_metadata.composers.extend(str(metadata['composers']))
-
+    sequence.sequence_metadata.sig_numerator = str(metadata['signature numerator'])
+    
   # Populate time signatures.
   for midi_time in midi.time_signature_changes:
     time_signature = sequence.time_signatures.add()
