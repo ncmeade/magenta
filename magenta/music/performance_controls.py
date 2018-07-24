@@ -364,7 +364,7 @@ class SignatureHistogramPerformanceControlSignal(PerformanceControlSignal):
   def encoder(self):
     return self._encoder
 
-  def extract(self, performance, epsilon=1e-4):
+  def extract(self, performance):
     """Creates signature class histogram at every event in a performance.
 
     Args:
@@ -377,7 +377,9 @@ class SignatureHistogramPerformanceControlSignal(PerformanceControlSignal):
       each signature class histogram is the length of the default signature histogram
       of float values. 
 
-      The values sum to one.
+      The values sum to one. 
+      
+      Format: [unknown, 2, 3]
     """
 
     histogram_sequence = []
@@ -395,14 +397,34 @@ class SignatureHistogramPerformanceControlSignal(PerformanceControlSignal):
       
       if signature_numerator is None:
         # time signature not known
-        histogram = [1.0 - 2 * epsilon, epsilon, epsilon]
-
-      elif int(signature_numerator) % 2: 
-        # time signature is odd
-        histogram = [epsilon, epsilon, 1 - 2 * epsilon]
+        histogram = [1.00, 0.00, 0.00]
+      elif int(signature_numerator) == 2: 
+        histogram = [0.05, 0.95, 0.00]
+      elif int(signature_numerator) == 3:
+        histogram = [0.05, 0.00, 0.95]
+      elif int(signature_numerator) == 4:
+        histogram = [0.05, 0.95, 0.00]
+      elif int(signature_numerator) == 5:
+        histogram = [0.70, 0.15, 0.15]
+      elif int(signature_numerator) == 6:
+        histogram = [0.10, 0.10, 0.80]
+      elif int(signature_numerator) == 7:
+        histogram = [0.70, 0.20, 0.10]
+      elif int(signature_numerator) == 8:
+        histogram = [0.05, 0.95, 0.00]
+      elif int(signature_numerator) == 9:
+        histogram = [0.05, 0.00, 0.95]
+      elif int(signature_numerator) == 10:
+        histogram = [0.70, 0.15, 0.15]
+      elif int(signature_numerator) == 11:
+        histogram = [1.00, 0.00, 0.00]
+      elif int(signature_numerator) == 12:
+        histogram = [0.20, 0.40, 0.40]
       else:
-        # time signature is even
-        histogram = [epsilon, 1 - 2 * epsilon, epsilon]
+        print("WARNING: an invalid numerator for the time signature was found.")
+        exit()
+
+
 
       histogram_sequence.append(histogram)
 
