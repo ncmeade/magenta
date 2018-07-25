@@ -40,13 +40,13 @@ for TEMP in $@
 do
 	for SIG in "${signatures[@]}"
 	do
-		./bazel-bin/magenta/models/performance_rnn/performance_rnn_generate
+		./bazel-bin/magenta/models/performance_rnn/performance_rnn_generate \
 		--run_dir=$RUN_DIR \
 		--output_dir=$OUTPUT_DIR \
 		--config=$CONFIG \
 		--num_outputs=$NUM_OUTPUTS \
 		--temperature=$TEMP \
-		--signature_class_histogram=$SIG
+		--signature_class_histogram="${SIG}"
 	done
 done 
 
