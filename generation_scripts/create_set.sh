@@ -2,9 +2,6 @@
 
 # Script to generate a set of experiments on perfRNN
 
-# Usage: ./midi_to_example.sh parent_dir_of_midis desired_output_dir
-# -----------------------------------------------------------------------------
-
 if (( $# < 3 )); then
 	echo "Usage: $0 <num outputs> <run_dir> <output_dir> <config> [<temps to iterate>]"
 	exit 1
