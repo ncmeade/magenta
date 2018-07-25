@@ -2,7 +2,7 @@
 
 # Script to generate a set of experiments on perfRNN
 
-if (( $# < 3 )); then
+if (( $# < 5 )); then
 	echo "Usage: $0 <num outputs> <run_dir> <output_dir> <config> [<temps to iterate>]"
 	exit 1
 elif (( $1 < 1 )); then
