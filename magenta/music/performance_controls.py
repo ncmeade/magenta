@@ -393,7 +393,6 @@ class SignatureHistogramPerformanceControlSignal(PerformanceControlSignal):
 
       # get literal
       signature_numerator = ast.literal_eval(signature_str)
-      print(signature_numerator)
       
       if signature_numerator is None:
         # time signature not known
@@ -422,15 +421,10 @@ class SignatureHistogramPerformanceControlSignal(PerformanceControlSignal):
         histogram = [0.20, 0.40, 0.40]
       else:
         print("WARNING: an invalid numerator for the time signature was found.")
-        exit()
-
-
+        exit()  # TODO: change this
 
       histogram_sequence.append(histogram)
-
-      print('histogram')
-      print(histogram)
-
+      
     return histogram_sequence
 
   class SignatureHistogramEncoder(encoder_decoder.EventSequenceEncoderDecoder):
