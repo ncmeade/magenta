@@ -35,6 +35,16 @@ signatures[5]="[0, 1.5, 0]"
 signatures[6]="[1.5, 0, 0]"
 signatures[7]="[0, -1, 1]"
 signatures[8]="[0, 1, -1]"
+signatures[9]="[0.05, 0.95, 0.00]"
+signatures[10]="[0.05, 0.00, 0.95]"
+signatures[11]="[0.70, 0.15, 0.15]"
+signatures[12]="[0.10, 0.10, 0.80]"
+signatures[13]="[0.70, 0.20, 0.10]"
+signatures[14]="[0.20, 0.40, 0.40]"
+signatures[15]="[0, 0, 2]"
+signatures[16]="[0, 2, 0]"
+signatures[17]="[0, 0, 3]"
+signatures[18]="[0, 3, 0]"
 
 for TEMP in $@
 do
@@ -46,11 +56,7 @@ do
 		--config=$CONFIG \
 		--num_outputs=$NUM_OUTPUTS \
 		--temperature=$TEMP \
-		--signature_class_histogram="${SIG}"
+		--signature_class_histogram="${SIG}" \
+		--num_steps=6000
 	done
 done 
-
-
-
-
-
