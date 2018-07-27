@@ -9,7 +9,7 @@ fi
 NOTESEQUENCES_FILE=$1
 OUTPUT_DIRECTORY=$2
 FILE_NUM=$3
-CONFIG=signature_conditioned_performance_with_dynamics
+CONFIG=time_place_conditioned_performance_with_dynamics
 
 cd ~/magenta
 source activate magenta
