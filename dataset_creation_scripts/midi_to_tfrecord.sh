@@ -16,4 +16,5 @@ source activate magenta
 nohup ./bazel-bin/magenta/scripts/convert_dir_to_note_sequences \
   --input_dir=$INPUT_DIRECTORY \
   --output_file=$SEQUENCES_TFRECORD \
+  --config=time_place_conditioned_performance_with_dynamics \
   --num_threads=$FILE_NUM > nohup_note_sequences.out
