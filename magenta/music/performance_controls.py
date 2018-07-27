@@ -33,6 +33,7 @@ NOTES_PER_OCTAVE = constants.NOTES_PER_OCTAVE
 DEFAULT_NOTE_DENSITY = 15.0
 DEFAULT_PITCH_HISTOGRAM = [1.0] * NOTES_PER_OCTAVE
 DEFAULT_SIGNATURE_HISTOGRAM = [0.0, 0.0, 0.0]
+DEFAULT_TIMEPLACE_HISTOGRAM = [0.0, 0.0, 0.0]
 
 
 # TODO: make this less hacky
@@ -451,6 +452,132 @@ class SignatureHistogramPerformanceControlSignal(PerformanceControlSignal):
     def class_index_to_event(self, class_index, events):
       raise NotImplementedError
 
+class TimePlaceHistogramPerformanceControlSignal(PerformanceControlSignal):
+  """Year of birth, latitude and longitude class histogram performance control signal. 
+  Values are normalized."""
+
+  name = 'time_place_histogram'
+  description = "Desired weight for year of birth and latitude/longitude"
+
+  def __init__(self):
+    """Initializes a TimePlaceHistogramPerformanceControlSignal.
+
+    Args:
+      
+    """
+    self._encoder = self.TimePlaceHistogramEncoder()
+
+  @property
+  def default_value(self):
+    return DEFAULT_TIMEPLACE_HISTOGRAM
+
+  def validate(self, value):
+    return (isinstance(value, list) and len(value) == len(DEFAULT_TIMEPLACE_HISTOGRAM) and
+            all(isinstance(val, numbers.Number) for val in value))
+
+  @property
+  def encoder(self):
+    return self._encoder
+
+  @staticmethod
+  def normalize(yob, lat, lon):
+    """ Normalizes year of birth latitude and longitude.
+
+    Args:
+      yob: year of birth
+      lat: latitude
+      lon: longitude
+
+    Returns:
+      Normalized yob, lat, lon
+    """
+
+    SCALE_LAT, SHIFT_LAT = 10, 50
+    SCALE_LON, SHIFT_LON = 10, 15
+    SCALE_YEAR, SHIFT_YEAR = 200, 1800
+
+    yob = (yob - SHIFT_YEAR) / SCALE_YEAR
+    lat = (lat - SHIFT_LAT) / SCALE_LAT
+    lon = (lon - SHIFT_LON) / SCALE_LON
+
+    return yob, lat, lon
+
+
+  def extract(self, performance):
+    """Creates timeplace histogram at every event in a performance.
+
+    Args:
+      performance: A Performance object for which to create a signature class
+          histogram sequence.
+
+    Returns:
+      A list of timeplace histograms the same length as `performance`, where
+      each timeplace histogram is the length of the default timeplace histogram
+      of float values. 
+
+      The values are normalized. 
+      
+      Format: [yob, lat, long]
+    """
+
+    histogram_sequence = []
+
+    for i, event in enumerate(performance):
+
+      # get yob for the given performance
+      yob_str = ''
+      for char in performance.yob:
+        yob_str += char
+
+      # get lat for the given performance
+      lat_str = ''
+      for char in performance.lat:
+        lat_str += char
+
+      # get lon for the given performance
+      lon_str = ''
+      for char in performance.lon:
+        lon_str += char
+
+      # get literal
+      yob, lat, lon = ast.literal_eval(yob_str), ast.literal_eval(lat_str), ast.literal_eval(lon_str)
+      
+      yob, lat, lon = self.normalize(yob, lat, lon)
+      histogram = [yob, lat, lon]
+
+      histogram_sequence.append(histogram)
+
+      # for debugging
+      if i % 50 == 0:
+        print("yob=%s, lat=%s, lon=%s" % (yob_str, lat_str, lon_str))
+        print(histogram)
+      
+    return histogram_sequence
+
+  class TimePlaceHistogramEncoder(encoder_decoder.EventSequenceEncoderDecoder):
+    """An encoder for timeplace sequences."""
+
+    @property
+    def input_size(self):
+      return len(DEFAULT_TIMEPLACE_HISTOGRAM)
+
+    @property
+    def num_classes(self):
+      raise NotImplementedError
+
+    @property
+    def default_event_label(self):
+      raise NotImplementedError
+
+    def events_to_input(self, events, position):
+      return events[position] # TODO: double check this
+
+    def events_to_label(self, events, position):
+      raise NotImplementedError
+
+    def class_index_to_event(self, class_index, events):
+      raise NotImplementedError
+
 class PitchHistogramPerformanceControlSignal(PerformanceControlSignal):
   """Pitch class histogram performance control signal."""
 
@@ -579,5 +706,6 @@ all_performance_control_signals = [
     NoteDensityPerformanceControlSignal,
     PitchHistogramPerformanceControlSignal,
     ComposerHistogramPerformanceControlSignal,
-    SignatureHistogramPerformanceControlSignal
+    SignatureHistogramPerformanceControlSignal,
+    TimePlaceHistogramPerformanceControlSignal
 ]
