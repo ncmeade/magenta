@@ -4,36 +4,34 @@ DIR=$1
 
 # Array of control signals to iterate over
 declare -a signatures
-signatures[0]="[0, 0, 0]"
-signatures[1]="[0, 0, 1]"
-signatures[2]="[0, 1, 0]"
-signatures[3]="[1, 0, 0]"
-signatures[4]="[0, 0, 1.5]"
-signatures[5]="[0, 1.5, 0]"
-signatures[6]="[1.5, 0, 0]"
-signatures[7]="[0, -1, 1]"
-signatures[8]="[0, 1, -1]"
-signatures[9]="[0.05, 0.95, 0.00]"
-signatures[10]="[0.05, 0.00, 0.95]"
-signatures[11]="[0.70, 0.15, 0.15]"
-signatures[12]="[0.10, 0.10, 0.80]"
-signatures[13]="[0.70, 0.20, 0.10]"
-signatures[14]="[0.20, 0.40, 0.40]"
-signatures[15]="[0, 0, 2]"
-signatures[16]="[0, 2, 0]"
-signatures[17]="[0, 0, 3]"
-signatures[18]="[0, 3, 0]"
+signatures[0]="1873RachmaninoffRussia"
+signatures[1]="1810ChopinPoland"
+signatures[2]="1862Debussy"
+signatures[3]="1732Haydn"
+signatures[4]="1685Bach"
+signatures[5]="1860Albeniz"
+signatures[6]="1811Liszt"
+signatures[7]="1700Russia"
+signatures[8]="1800USA"
+signatures[9]="1950France"
+signatures[10]="1800Tunisia"
+signatures[11]="1800Estonia"
+signatures[12]="1800Kazakhstan"
+signatures[13]="1850NorthAtlantic"
+signatures[14]="1850Cyprus"
+signatures[15]="1800NorthPole"
+signatures[16]="1850SouthAfrica"
 
 i=0
 j=0
 
 
-for file in `ls $DIR*.mp3`
+for file in `ls $DIR*`
 do
 	NAME=$( dirname $file )
-	echo $file
-	#echo $NAME'/'"${signatures[$j]}"'_'$(( i%2 + 1 ))'.mp3'
-	mv $file $NAME'/'"${signatures[$j]}"'_'$(( i%2 + 1 ))'.mp3'
+	echo $file"\t\t${i}"
+	#echo $NAME'/'"${signatures[$j]}"'_'$(( i%2 + 1 ))'.mid'
+	#mv $file $NAME'/'"${signatures[$j]}"'_'$(( i%2 + 1 ))'.mid'
 
 	(( i++ ))
 
