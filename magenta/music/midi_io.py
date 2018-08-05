@@ -101,6 +101,9 @@ def midi_to_sequence_proto(midi_data, metadata=None):
     #sequence.sequence_metadata.genre = metadata['genre']
     sequence.sequence_metadata.composers.extend(str(metadata['composers']))
     sequence.sequence_metadata.sig_numerator = str(metadata['signature numerator'])
+    sequence.sequence_metadata.yob = str(metadata['yob'])
+    sequence.sequence_metadata.lat = str(metadata['latitude'])
+    sequence.sequence_metadata.lon = str(metadata['longitude'])
     
   # Populate time signatures.
   for midi_time in midi.time_signature_changes:

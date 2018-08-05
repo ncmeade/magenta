@@ -94,7 +94,8 @@ class BasePerformance(events_lib.EventSequence):
   __metaclass__ = abc.ABCMeta
 
   def __init__(self, start_step, num_velocity_bins, max_shift_steps,
-               program=None, is_drum=None, composers=None, sig_numerator=None):
+               program=None, is_drum=None, composers=None, sig_numerator=None,
+               yob=None, lat=None, lon=None):
     """Construct a BasePerformance.
 
     Args:
@@ -123,6 +124,9 @@ class BasePerformance(events_lib.EventSequence):
     self._is_drum = is_drum
     self._composers = composers
     self._sig_numerator = sig_numerator
+    self._yob = yob
+    self._lat = lat
+    self._lon = lon
 
   @property
   def start_step(self):
@@ -147,6 +151,18 @@ class BasePerformance(events_lib.EventSequence):
   @property
   def sig_numerator(self):
     return self._sig_numerator
+
+  @property
+  def yob(self):
+    return self._yob
+
+  @property
+  def lat(self):
+    return self._lat
+
+  @property
+  def lon(self):
+    return self._lon
   
   def _append_steps(self, num_steps):
     """Adds steps to the end of the sequence."""
@@ -515,7 +531,8 @@ class Performance(BasePerformance):
   def __init__(self, quantized_sequence=None, steps_per_second=None,
                start_step=0, num_velocity_bins=0,
                max_shift_steps=DEFAULT_MAX_SHIFT_STEPS, instrument=None,
-               program=None, is_drum=None, composers=None, sig_numerator=None):
+               program=None, is_drum=None, composers=None, sig_numerator=None,
+               yob=None, lat=None, lon=None):
     """Construct a Performance.
 
     Either quantized_sequence or steps_per_second should be supplied.
@@ -568,7 +585,10 @@ class Performance(BasePerformance):
         program=program,
         is_drum=is_drum,
         composers=composers,
-        sig_numerator=sig_numerator)
+        sig_numerator=sig_numerator,
+        yob= yob,
+        lat = lat,
+        lon = lon)
 
   @property
   def steps_per_second(self):
@@ -609,7 +629,8 @@ class MetricPerformance(BasePerformance):
   def __init__(self, quantized_sequence=None, steps_per_quarter=None,
                start_step=0, num_velocity_bins=0,
                max_shift_quarters=DEFAULT_MAX_SHIFT_QUARTERS, instrument=None,
-               program=None, is_drum=None, composers=None):
+               program=None, is_drum=None, composers=None, sig_numerator=None,
+               yob=None, lat=None, lon=None):
     """Construct a MetricPerformance.
 
     Either quantized_sequence or steps_per_quarter should be supplied.
@@ -661,7 +682,11 @@ class MetricPerformance(BasePerformance):
         max_shift_steps=self._steps_per_quarter * max_shift_quarters,
         program=program,
         is_drum=is_drum,
-        composers=composers)
+        composers=composers,
+        sig_numerator=sig_numerator,
+        yob= yob,
+        lat = lat,
+        lon = lon)
 
   @property
   def steps_per_quarter(self):
@@ -768,13 +793,19 @@ def extract_performances(
                                 num_velocity_bins=num_velocity_bins,
                                 instrument=instrument,
                                 composers=quantized_sequence.sequence_metadata.composers,
-                                sig_numerator=quantized_sequence.sequence_metadata.sig_numerator)
+                                sig_numerator=quantized_sequence.sequence_metadata.sig_numerator,
+                                yob=quantized_sequence.sequence_metadata.yob,
+                                lat=quantized_sequence.sequence_metadata.lat,
+                                lon=quantized_sequence.sequence_metadata.lon)
     else:
       performance = MetricPerformance(quantized_sequence, start_step=start_step,
                                       num_velocity_bins=num_velocity_bins,
                                       instrument=instrument,
                                       composers=quantized_sequence.sequence_metadata.composers,
-                                      sig_numerator=quantized_sequence.sequence_metadata.sig_numerator)
+                                      sig_numerator=quantized_sequence.sequence_metadata.sig_numerator,
+                                      yob=quantized_sequence.sequence_metadata.yob,
+                                      lat=quantized_sequence.sequence_metadata.lat,
+                                      lon=quantized_sequence.sequence_metadata.lon)
 
     if (max_steps_truncate is not None and
         performance.num_steps > max_steps_truncate):

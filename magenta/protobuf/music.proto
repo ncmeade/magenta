@@ -420,4 +420,13 @@ message SequenceMetadata {
 
   // Time signature numerator
   string sig_numerator = 5;
+
+  // Year of birth of composer
+  string yob = 6;
+
+  // Latitude of composers location
+  string lat = 7;
+
+  // Longitude of composers location
+  string lon = 8;
 }
