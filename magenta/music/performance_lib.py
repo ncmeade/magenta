@@ -42,10 +42,6 @@ DEFAULT_MAX_SHIFT_QUARTERS = 4
 
 DEFAULT_PROGRAM = 0
 
-# TODO: read composer field from music.proto as a list of composers
-# TODO: create note sequences with multiple composers
-
-
 class PerformanceEvent(object):
   """Class for storing events in a performance."""
 
