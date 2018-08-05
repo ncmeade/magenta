@@ -326,8 +326,8 @@ default_configs = {
 
     'time_place_conditioned_performance_with_dynamics': PerformanceRnnConfig(
         magenta.protobuf.generator_pb2.GeneratorDetails(
-            id='signature_conditioned_performance_with_dynamics',
-            description='Signature-histogram-conditioned Performance RNN'),
+            id='time_place_conditioned_performance_with_dynamics',
+            description='Time-and-place-conditioned Performance RNN'),
         magenta.music.OneHotEventSequenceEncoderDecoder(
             magenta.music.PerformanceOneHotEncoding(
                 num_velocity_bins=32)),
@@ -339,7 +339,7 @@ default_configs = {
             learning_rate=0.001),
         num_velocity_bins=32,
         control_signals=[
-            magenta.music.TimePlaceHistogramPerformanceControlSignal()
+            magenta.music.TimePlacePerformanceControlSignal()
         ]),
 
     'multiconditioned_performance_with_dynamics': PerformanceRnnConfig(

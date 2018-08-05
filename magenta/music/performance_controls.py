@@ -19,6 +19,7 @@ import abc
 import copy
 import numbers
 import ast
+import tensorflow as tf
 
 # Used for composer master list
 import json
@@ -33,7 +34,7 @@ NOTES_PER_OCTAVE = constants.NOTES_PER_OCTAVE
 DEFAULT_NOTE_DENSITY = 15.0
 DEFAULT_PITCH_HISTOGRAM = [1.0] * NOTES_PER_OCTAVE
 DEFAULT_SIGNATURE_HISTOGRAM = [0.0, 0.0, 0.0]
-DEFAULT_TIMEPLACE_HISTOGRAM = [0.0, 0.0, 0.0]
+DEFAULT_TIMEPLACE_VECTOR = [0.0, 0.0, 0.0]
 
 
 # TODO: make this less hacky
@@ -244,7 +245,6 @@ class NoteDensityPerformanceControlSignal(PerformanceControlSignal):
         return self._density_bin_ranges[index - 1]
 
 
-
 class ComposerHistogramPerformanceControlSignal(PerformanceControlSignal):
   """Composer class histogram performance control signal."""
 
@@ -284,33 +284,27 @@ class ComposerHistogramPerformanceControlSignal(PerformanceControlSignal):
       each composer class histogram is the length of the composer master-list of float values. 
       The values sum to one.
     """
+    # get list of composers for the given performance
+    composer_list_str = ''
+    for char in performance.composers:
+      composer_list_str += char
+    
+    # parse string representation of list as a list
+    composer_list = ast.literal_eval(composer_list_str)
 
-    histogram_sequence = []
+    # weight each of the composers equally in the histogram
+    weight = 1.0 / len(composer_list) 
+    default_weight = 0.0
 
-    for i, event in enumerate(performance):
-
-      # get list of composers for the given performance
-      composer_list_str = ''
-      for char in performance.composers:
-        composer_list_str += char
-
-      # parse string representation of list as a list
-      composer_list = ast.literal_eval(composer_list_str)
-
-      # weight each of the composers equally in the histogram
-      weight = 1.0 / len(composer_list) 
-      default_weight = 0.0
-
-      histogram = []
+    histogram = []
       
-      for composer in COMPOSERS:
-        if composer in composer_list:
-          histogram.append(weight) # new weights. sum to 1.0. all equal.
-        else:
-          histogram.append(default_weight) # currently 0.0
-
-      histogram_sequence.append(histogram)
-
+    for composer in COMPOSERS:
+      if composer in composer_list:
+        histogram.append(weight) # new weights - sum to 1.0
+      else:
+        histogram.append(default_weight) # currently 0.0 
+    
+    histogram_sequence = [histogram] * len(performance)
     return histogram_sequence
 
   class ComposerHistogramEncoder(encoder_decoder.EventSequenceEncoderDecoder):
@@ -336,6 +330,7 @@ class ComposerHistogramPerformanceControlSignal(PerformanceControlSignal):
 
     def class_index_to_event(self, class_index, events):
       raise NotImplementedError
+
 
 class SignatureHistogramPerformanceControlSignal(PerformanceControlSignal):
   """Time signature class histogram performance control signal. Current 
@@ -383,49 +378,45 @@ class SignatureHistogramPerformanceControlSignal(PerformanceControlSignal):
       Format: [unknown, 2, 3]
     """
 
-    histogram_sequence = []
+    # get signature for the given performance
+    signature_str = ''
+    for char in performance.sig_numerator:
+      signature_str += char
 
-    for i, event in enumerate(performance):
+    # get literal
+    signature_numerator = ast.literal_eval(signature_str)
 
-      # get signature for the given performance
-      signature_str = ''
-      for char in performance.sig_numerator:
-        signature_str += char
-
-      # get literal
-      signature_numerator = ast.literal_eval(signature_str)
-      
-      if signature_numerator is None:
-        # time signature not known
+    # get histogram corresponding to time sig numerator
+    if signature_numerator is None:
         histogram = [1.00, 0.00, 0.00]
-      elif int(signature_numerator) == 2: 
-        histogram = [0.05, 0.95, 0.00]
-      elif int(signature_numerator) == 3:
-        histogram = [0.05, 0.00, 0.95]
-      elif int(signature_numerator) == 4:
-        histogram = [0.05, 0.95, 0.00]
-      elif int(signature_numerator) == 5:
-        histogram = [0.70, 0.15, 0.15]
-      elif int(signature_numerator) == 6:
-        histogram = [0.10, 0.10, 0.80]
-      elif int(signature_numerator) == 7:
-        histogram = [0.70, 0.20, 0.10]
-      elif int(signature_numerator) == 8:
-        histogram = [0.05, 0.95, 0.00]
-      elif int(signature_numerator) == 9:
-        histogram = [0.05, 0.00, 0.95]
-      elif int(signature_numerator) == 10:
-        histogram = [0.70, 0.15, 0.15]
-      elif int(signature_numerator) == 11:
-        histogram = [1.00, 0.00, 0.00]
-      elif int(signature_numerator) == 12:
-        histogram = [0.20, 0.40, 0.40]
-      else:
-        print("WARNING: an invalid numerator for the time signature was found.")
-        exit()  # TODO: change this
+    elif int(signature_numerator) == 2: 
+      histogram = [0.05, 0.95, 0.00]
+    elif int(signature_numerator) == 3:
+      histogram = [0.05, 0.00, 0.95]
+    elif int(signature_numerator) == 4:
+      histogram = [0.05, 0.95, 0.00]
+    elif int(signature_numerator) == 5:
+      histogram = [0.70, 0.15, 0.15]
+    elif int(signature_numerator) == 6:
+      histogram = [0.10, 0.10, 0.80]
+    elif int(signature_numerator) == 7:
+      histogram = [0.70, 0.20, 0.10]
+    elif int(signature_numerator) == 8:
+      histogram = [0.05, 0.95, 0.00]
+    elif int(signature_numerator) == 9:
+      histogram = [0.05, 0.00, 0.95]
+    elif int(signature_numerator) == 10:
+      histogram = [0.70, 0.15, 0.15]
+    elif int(signature_numerator) == 11:
+      histogram = [1.00, 0.00, 0.00]
+    elif int(signature_numerator) == 12:
+      histogram = [0.20, 0.40, 0.40]
+    else:
+      histogram = [1.00, 0.00, 0.00]
+      tf.logging.warning("Time signature numerator: {}".format(signature_numerator))
 
-      histogram_sequence.append(histogram)
-      
+    histogram_sequence = [histogram] * len(performance)
+    
     return histogram_sequence
 
   class SignatureHistogramEncoder(encoder_decoder.EventSequenceEncoderDecoder):
@@ -452,12 +443,13 @@ class SignatureHistogramPerformanceControlSignal(PerformanceControlSignal):
     def class_index_to_event(self, class_index, events):
       raise NotImplementedError
 
-class TimePlaceHistogramPerformanceControlSignal(PerformanceControlSignal):
-  """Year of birth, latitude and longitude class histogram performance control signal. 
-  Values are normalized."""
 
-  name = 'time_place_histogram'
-  description = "Desired weight for year of birth and latitude/longitude"
+class TimePlacePerformanceControlSignal(PerformanceControlSignal):
+  """Year of birth (yob), latitude (lat) and longitude (lon) vector 
+  performance control signal. Values are normalized."""
+
+  name = 'time_place_vector'
+  description = "Desired normalized vector for year of birth and latitude/longitude"
 
   def __init__(self):
     """Initializes a TimePlaceHistogramPerformanceControlSignal.
@@ -465,14 +457,15 @@ class TimePlaceHistogramPerformanceControlSignal(PerformanceControlSignal):
     Args:
       
     """
-    self._encoder = self.TimePlaceHistogramEncoder()
+    self._encoder = self.TimePlaceEncoder()
 
   @property
   def default_value(self):
-    return DEFAULT_TIMEPLACE_HISTOGRAM
+    tf.logging.warning("Default time-place vector is being used.")
+    return DEFAULT_TIMEPLACE_VECTOR
 
   def validate(self, value):
-    return (isinstance(value, list) and len(value) == len(DEFAULT_TIMEPLACE_HISTOGRAM) and
+    return (isinstance(value, list) and len(value) == len(DEFAULT_TIMEPLACE_VECTOR) and
             all(isinstance(val, numbers.Number) for val in value))
 
   @property
@@ -481,7 +474,7 @@ class TimePlaceHistogramPerformanceControlSignal(PerformanceControlSignal):
 
   @staticmethod
   def normalize(yob, lat, lon):
-    """ Normalizes year of birth latitude and longitude.
+    """ Normalizes year of birth latitude and longitude. Uses macros.
 
     Args:
       yob: year of birth
@@ -520,46 +513,46 @@ class TimePlaceHistogramPerformanceControlSignal(PerformanceControlSignal):
       Format: [yob, lat, long]
     """
 
-    histogram_sequence = []
+    # get yob for the given performance
+    yob_str = ''
+    for char in performance.yob:
+      yob_str += char
 
-    for i, event in enumerate(performance):
+    # get lat for the given performance
+    lat_str = ''
+    for char in performance.lat:
+      lat_str += char
 
-      # get yob for the given performance
-      yob_str = ''
-      for char in performance.yob:
-        yob_str += char
+    # get lon for the given performance
+    lon_str = ''
+    for char in performance.lon:
+      lon_str += char
 
-      # get lat for the given performance
-      lat_str = ''
-      for char in performance.lat:
-        lat_str += char
-
-      # get lon for the given performance
-      lon_str = ''
-      for char in performance.lon:
-        lon_str += char
-
-      # get literal
+    # get literal
+    try:
       yob, lat, lon = ast.literal_eval(yob_str), ast.literal_eval(lat_str), ast.literal_eval(lon_str)
+    except:
+      tf.logging.error("AST literal evaluation failed.")
+    
+    yob, lat, lon = self.normalize(yob, lat, lon)
+    vector = [yob, lat, lon]
+
+    vector_sequence = [vector] * len(performance)
+
+    tf.logging.debug("yob={}, lat={}, lon={}".format(yob_str, lat_str, lon_str))
+    tf.logging.debug("Length of vector sequence: {}".format(len(vector_sequence)))
+    tf.logging.debug("First vector in sequence: {}".format(vector_sequence[0]))
+    tf.logging.debug("Middle vector in sequence: {}".format(vector_sequence[len(performance // 2)]))
+    tf.logging.debug("Last vector in sequence: {}".format(vector_sequence[-1]))
       
-      yob, lat, lon = self.normalize(yob, lat, lon)
-      histogram = [yob, lat, lon]
+    return vector_sequence
 
-      histogram_sequence.append(histogram)
-
-      # for debugging
-      if i % 50 == 0:
-        print("yob=%s, lat=%s, lon=%s" % (yob_str, lat_str, lon_str))
-        print(histogram)
-      
-    return histogram_sequence
-
-  class TimePlaceHistogramEncoder(encoder_decoder.EventSequenceEncoderDecoder):
-    """An encoder for timeplace sequences."""
+  class TimePlaceEncoder(encoder_decoder.EventSequenceEncoderDecoder):
+    """An encoder for sequences of time/place of composition."""
 
     @property
     def input_size(self):
-      return len(DEFAULT_TIMEPLACE_HISTOGRAM)
+      return len(DEFAULT_TIMEPLACE_VECTOR)
 
     @property
     def num_classes(self):
@@ -577,6 +570,7 @@ class TimePlaceHistogramPerformanceControlSignal(PerformanceControlSignal):
 
     def class_index_to_event(self, class_index, events):
       raise NotImplementedError
+
 
 class PitchHistogramPerformanceControlSignal(PerformanceControlSignal):
   """Pitch class histogram performance control signal."""
@@ -707,5 +701,5 @@ all_performance_control_signals = [
     PitchHistogramPerformanceControlSignal,
     ComposerHistogramPerformanceControlSignal,
     SignatureHistogramPerformanceControlSignal,
-    TimePlaceHistogramPerformanceControlSignal
+    TimePlacePerformanceControlSignal
 ]
