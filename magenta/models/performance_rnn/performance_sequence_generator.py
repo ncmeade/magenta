@@ -155,12 +155,15 @@ class PerformanceRnnSequenceGenerator(mm.BaseSequenceGenerator):
     # Make sure control signals are present and convert to lists if necessary.
     if self.control_signals:
       for control in self.control_signals:
+        tf.logging.debug('Control signal used in generation: {}'.format(control))
         if control.name not in args:
           tf.logging.warning(
               'Control value not specified, using default: %s = %s',
               control.name, control.default_value)
           args[control.name] = [control.default_value]
         elif control.validate(args[control.name]):
+          tf.logging.debug('Validated {} control signal'.format(control))
+          tf.logging.debug('args[control.name]={}'.format(args[control.name]))
           args[control.name] = [args[control.name]]
         else:
           if not isinstance(args[control.name], list) or not all(
@@ -201,6 +204,7 @@ class PerformanceRnnSequenceGenerator(mm.BaseSequenceGenerator):
             values=args[control.name]))
         del args[control.name]
       args['control_signal_fns'] = control_signal_fns
+      tf.logging.debug('control_signal_fns={}'.format(control_signal_fns))
     if self.optional_conditioning:
       args['disable_conditioning_fn'] = partial(
           _step_to_value,
@@ -244,6 +248,7 @@ def _step_to_value(step, num_steps, values):
   """Map step in performance to desired control signal value."""
   num_segments = len(values)
   index = min(step * num_segments // num_steps, num_segments - 1)
+  tf.logging.debug('step={} value[index]={}'.format(step,values[index]))
   return values[index]
 
 
