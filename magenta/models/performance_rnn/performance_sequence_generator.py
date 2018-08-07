@@ -245,7 +245,8 @@ def _step_to_value(step, num_steps, values):
   """Map step in performance to desired control signal value."""
   num_segments = len(values)
   index = min(step * num_segments // num_steps, num_segments - 1)
-  tf.logging.debug('step={} value[index]={}'.format(step,values[index]))
+  tf.logging.debug('num_steps={} step={} values={} value[index]={}'.format(num_steps,
+            step,values, values[index]))
   return values[index]
 
 
