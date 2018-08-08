@@ -778,8 +778,6 @@ class ConditionalEventSequenceEncoderDecoder(object):
     inputs = []
     labels = []
     for i in range(len(target_events) - 1):
-      if i is None: #    TEST _________________________________________________________
-        raise ValueError('i is NoneType')
       inputs.append(self.events_to_input(control_events, target_events, i))
       labels.append(self.events_to_label(target_events, i + 1))
     return sequence_example_lib.make_sequence_example(inputs, labels)
