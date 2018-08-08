@@ -1,10 +1,10 @@
 #!/bin/bash
 
-# Usage: ./midi_to_example.sh parent_dir_of_midis desired_output_dir
+# Usage: ./midi_to_example.sh parent_dir_of_midis desired_output_dir config
 # -----------------------------------------------------------------------------
 
-if (( $# < 3 )); then
-	echo "Usage: $0 <num processess> <dir_of_midis> <output_dir> "
+if (( $# < 4 )); then
+	echo "Usage: $0 <num processess> <dir_of_midis> <output_dir> <config>"
 	exit 1
 elif (( $1 < 1 )); then
 	echo "Error: Must specify at least 1 job"
@@ -14,7 +14,7 @@ fi
 PROCESSES=$1
 INPUT_DIRECTORY=$2
 OUTPUT_DIRECTORY=$3
-CONFIG=signature_conditioned_performance_with_dynamics
+CONFIG=$4
 TEMP_DIR=~/temp_script_files
 TEMP_DIR_IN=$TEMP_DIR/all_inputs
 TEMP_DIR_OUT=$TEMP_DIR/all_outputs
