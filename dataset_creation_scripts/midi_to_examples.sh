@@ -14,6 +14,7 @@ fi
 PROCESSES=$1
 INPUT_DIRECTORY=$2
 OUTPUT_DIRECTORY=$3
+CONFIG=signature_conditioned_performance_with_dynamics
 TEMP_DIR=~/temp_script_files
 TEMP_DIR_IN=$TEMP_DIR/all_inputs
 TEMP_DIR_OUT=$TEMP_DIR/all_outputs
@@ -81,7 +82,7 @@ i=0
 echo "Creating notesequences . . ."
 while (( $i < $PROCESSES )); do
 	# Note: this runs in the background
-	./dataset_creation_scripts/midi_to_tfrecord.sh $TEMP_DIR_IN/inputs${i} $TEMP_DIR_OUT_NS/notesequences${i}.tfrecord ${i}&
+	./dataset_creation_scripts/midi_to_tfrecord.sh $TEMP_DIR_IN/inputs${i} $TEMP_DIR_OUT_NS/notesequences${i}.tfrecord ${i} ${CONFIG}&
 
 	(( i++ ))
 done
@@ -94,7 +95,7 @@ i=0
 echo "Creating sequenceexamples . . ."
 while (( $i < $PROCESSES )); do
 	# Note: this runs in the background
-	./dataset_creation_scripts/tfrecord_to_examples.sh $TEMP_DIR_OUT_NS/notesequences${i}.tfrecord $TEMP_DIR_OUT_EX/sequenceexamples${i} ${i}&
+	./dataset_creation_scripts/tfrecord_to_examples.sh $TEMP_DIR_OUT_NS/notesequences${i}.tfrecord $TEMP_DIR_OUT_EX/sequenceexamples${i} ${i} ${CONFIG}&
 
 	(( i++ ))
 done
