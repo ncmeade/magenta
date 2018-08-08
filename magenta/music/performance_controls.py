@@ -485,9 +485,9 @@ class TimePlacePerformanceControlSignal(PerformanceControlSignal):
       Normalized yob, lat, lon
     """
 
-    SCALE_LAT, SHIFT_LAT = 10, 50
-    SCALE_LON, SHIFT_LON = 10, 15
-    SCALE_YEAR, SHIFT_YEAR = 200, 1800
+    SCALE_LAT, SHIFT_LAT = 45.18, 10.57
+    SCALE_LON, SHIFT_LON = 119.58, 20.36
+    SCALE_YEAR, SHIFT_YEAR = 159.5, 1812.5
 
     yob = (yob - SHIFT_YEAR) / SCALE_YEAR
     lat = (lat - SHIFT_LAT) / SCALE_LAT
