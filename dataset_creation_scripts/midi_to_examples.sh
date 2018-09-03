@@ -59,16 +59,16 @@ do
 		do
 			NAME=$( basename "$FILE_" .mid ) 
                 	ln ${FILE}/${NAME}.mid $TEMP_DIR_IN/inputs$(( i % PROCESSES ))/${FILE_NUM}.mid
-                	ln ${FILE}/${NAME}.txt $TEMP_DIR_IN/inputs$(( i % PROCESSES ))/${FILE_NUM}.txt
+                	ln ${FILE}/${NAME}.json $TEMP_DIR_IN/inputs$(( i % PROCESSES ))/${FILE_NUM}.json
                 	(( i++ ))
 			(( FILE_NUM++ ))
 		done
-	elif [ ${FILE: -4} == ".txt" ]; then
+	elif [ ${FILE: -4} == ".json" ]; then
         	continue # Skip text files
 	else
 		NAME=$( basename "$FILE" .mid )
         	ln ${INPUT_DIRECTORY}/${NAME}.mid $TEMP_DIR_IN/inputs$(( i % PROCESSES ))/${FILE_NUM}.mid
-        	ln ${INPUT_DIRECTORY}/${NAME}.txt $TEMP_DIR_IN/inputs$(( i % PROCESSES ))/${FILE_NUM}.txt
+        	ln ${INPUT_DIRECTORY}/${NAME}.json $TEMP_DIR_IN/inputs$(( i % PROCESSES ))/${FILE_NUM}.json
 		(( i++ ))
 		(( FILE_NUM++ ))
 	fi
