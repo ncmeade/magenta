@@ -287,9 +287,9 @@ default_configs = {
                 window_size_seconds=5.0)
         ]),
 
-    'multi_composer_conditioned_performance_with_dynamics': PerformanceRnnConfig(
+    'composer_conditioned_performance_with_dynamics': PerformanceRnnConfig(
         magenta.protobuf.generator_pb2.GeneratorDetails(
-            id='multi_composer_conditioned_performance_with_dynamics',
+            id='composer_conditioned_performance_with_dynamics',
             description='Composer-histogram-conditioned Performance RNN'),
         magenta.music.OneHotEventSequenceEncoderDecoder(
             magenta.music.PerformanceOneHotEncoding(

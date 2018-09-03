@@ -59,9 +59,7 @@ def midi_to_sequence_proto(midi_data, metadata=None):
   Args:
     midi_data: A string containing the contents of a MIDI file or populated
         pretty_midi.PrettyMIDI object.
-    meta_data: A dictionary with keys: title, artist, genre and composers
-        mapping to values that correspond with the MIDI file (genre and 
-        composers can be lists)
+    meta_data: A dictionary containing metadata for the given MIDI
 
   Returns:
     A tensorflow.magenta.NoteSequence proto.
@@ -96,12 +94,12 @@ def midi_to_sequence_proto(midi_data, metadata=None):
   # Populate metadata
   if metadata is not None:
     sequence.sequence_metadata.title = metadata['title']
-    sequence.sequence_metadata.artist = metadata['artist']
+    sequence.sequence_metadata.artist = metadata['performer']
     # TODO: include genre
     #sequence.sequence_metadata.genre = metadata['genre']
     sequence.sequence_metadata.composers.extend(str(metadata['composers']))
-    sequence.sequence_metadata.sig_numerator = str(metadata['signature numerator'])
-    sequence.sequence_metadata.yob = str(metadata['yob'])
+    sequence.sequence_metadata.sig_numerator = str(metadata['signature_numerator'])
+    sequence.sequence_metadata.yob = str(metadata['year_of_birth'])
     sequence.sequence_metadata.lat = str(metadata['latitude'])
     sequence.sequence_metadata.lon = str(metadata['longitude'])
     

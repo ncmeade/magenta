@@ -29,8 +29,6 @@ import os
 
 # internal imports
 import tensorflow as tf
-
-# used to save master list of composers
 import json
 
 from magenta.music import abc_parser
@@ -106,8 +104,8 @@ def convert_files(root_dir, sub_dir, writer, recursive=False):
       if sequences:
         for sequence in sequences:
           writer.write(sequence)
-    elif full_file_path.lower().endswith('.txt'):
-        tf.logging.info("Text file detected: %s", full_file_path)
+    elif full_file_path.lower().endswith('.json'):
+        tf.logging.info("JSON file detected: %s", full_file_path)
     else:
       if recursive and tf.gfile.IsDirectory(full_file_path):
         recurse_sub_dirs.append(os.path.join(sub_dir, file_in_dir))
@@ -119,51 +117,30 @@ def convert_files(root_dir, sub_dir, writer, recursive=False):
     convert_files(root_dir, recurse_sub_dir, writer, recursive)
 
 def extract_metadata(midi_file_path):
-  """ Extracts title, artist, genre(s) and composer(s) from text file.
-
-  The text file is assumed to be located in the same directory as its
-  corresponding MIDI file. It is also assumed to have the same file name
-  only it ends with a .txt extension.
-
-  The format of the text files containing metadata is as follows:
-  [url]
-  [title]
-  [composer]
-  [performer]
-  [performer's nationality]
-  [time signature numerator]
-
+  """ Extracts metadata from JSON at path like midi_file_path but with .json extension.
   Args:
     full_file_path: the full path to the corresponding MIDI file.
 
   Returns:
-    A dictionary of metadata corresponding to the MIDI file
+    A dictionary of metadata for to the MIDI file
   """
-  metadata = {'title':'', 'artist':'', 'genres':'', 'composers':'', 'signature numerator': '', 'yob':'', 'latitude':'', 'longitude':''}
+  file_name, _ = os.path.splitext(midi_file_path)
+  file_name = file_name + '.json'
 
-  extensionless_file, _ = os.path.splitext(midi_file_path)
-  text_file = extensionless_file + '.txt'
+  with open(file_name) as f:
+    metadata = json.load(f)
 
-  with open(text_file) as file:
-    _ = file.readline() # URL
-    metadata['title'] = file.readline().rstrip('\n') # TODO: allow conditioning by title
-    metadata['composers'] = file.readline().rstrip('\n').split('/')
-    metadata['artist'] = file.readline().rstrip('\n') # TODO: allow conditioning by artist
-    _ = file.readline() # Nationality
-    metadata['signature numerator'] = file.readline().rstrip('\n')
-    metadata['yob'] = file.readline().rstrip('\n')
-    metadata['latitude'] = file.readline().rstrip('\n')
-    metadata['longitude'] = file.readline().rstrip('\n')
-
-  # Note: genre is left blank
-
-  # Update a master list of composers to be used when encoding to one-hot
+  # Update a master list of composers to be used when encoding
   update_composer_master_list(metadata['composers'])
 
   return metadata
 
-# TODO: document this
 def update_composer_master_list(composers):
+  """Adds all composers to composer_mast_list
+
+  Args:
+    composers: list of composers      
+  """
   for composer in composers:
     if composer not in composer_master_list:
       composer_master_list.append(composer)

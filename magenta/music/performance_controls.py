@@ -20,6 +20,7 @@ import copy
 import numbers
 import ast
 import tensorflow as tf
+import os
 
 # Used for composer master list
 import json
@@ -38,33 +39,29 @@ DEFAULT_TIMEPLACE_VECTOR = [0.0, 0.0, 0.0]
 
 
 # TODO: make this less hacky
-# Master list of composers in current model
-
-#composer_master_list = []
-#composer_list_paths = glob.glob('/tmp/composer_metadata*.json')
-#for path in composer_list_paths: 
-#  with open(path, 'r') as file:
-#    composer_list = json.load(file)
-#  for composer in composer_list:
-#    if composer not in composer_master_list:
-#      composer_master_list.append(composer)
-
-#composer_master_list.sort()
-
-#with open('/tmp/composer_metadata_master.json', 'w+') as file:
-#    # Save composer_master_list as JSON so it can be inspected
-#    json.dump(composer_master_list, file)
-try:
+if os.path.isfile('/tmp/composer_metadata_master.json'):
   with open('/tmp/composer_metadata_master.json', 'r') as file:
     composer_master_list = json.load(file)
 
-  composer_master_list.sort()
+else:
+  composer_master_list = []
+  composer_list_paths = glob.glob('/tmp/composer_metadata*.json')
 
-  COMPOSERS = composer_master_list
-  DEFAULT_COMPOSER = ''
-  DEFAULT_COMPOSER_HISTOGRAM = [0.0] * len(COMPOSERS)
-except:
-  print('WARNING: composer master list not found')
+  for path in composer_list_paths: 
+    with open(path, 'r') as file:
+      composer_list = json.load(file)
+    for composer in composer_list:
+      if composer not in composer_master_list:
+        composer_master_list.append(composer)
+
+  with open('/tmp/composer_metadata_master.json', 'w+') as file:
+    # Save composer_master_list as JSON
+    json.dump(composer_master_list, file)
+    
+composer_master_list.sort()
+COMPOSERS = composer_master_list
+DEFAULT_COMPOSER = ''
+DEFAULT_COMPOSER_HISTOGRAM = [0.0] * len(COMPOSERS)
 
 
 class PerformanceControlSignal(object):
@@ -483,7 +480,7 @@ class GlobalPositionPerformanceControlSignal(PerformanceControlSignal):
       entry equal to the note density in the window starting at the
       corresponding performance event time.
     """
-    delta_time = 0.0
+    delta_time = performance.start_step
     position_sequence = []
 
     for event in performance:
