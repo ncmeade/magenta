@@ -429,4 +429,7 @@ message SequenceMetadata {
 
   // Longitude of composers location
   string lon = 8;
+
+  // The dataset the sample was obtained from
+  string dataset = 9;
 }

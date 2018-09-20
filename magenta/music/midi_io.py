@@ -102,6 +102,7 @@ def midi_to_sequence_proto(midi_data, metadata=None):
     sequence.sequence_metadata.yob = str(metadata['year_of_birth'])
     sequence.sequence_metadata.lat = str(metadata['latitude'])
     sequence.sequence_metadata.lon = str(metadata['longitude'])
+    sequence.sequence_metadata.dataset = metadata['dataset']
     
   # Populate time signatures.
   for midi_time in midi.time_signature_changes:

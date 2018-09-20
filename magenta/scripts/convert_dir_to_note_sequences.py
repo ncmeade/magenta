@@ -117,7 +117,7 @@ def convert_files(root_dir, sub_dir, writer, recursive=False):
     convert_files(root_dir, recurse_sub_dir, writer, recursive)
 
 def extract_metadata(midi_file_path):
-  """ Extracts metadata from JSON at path like midi_file_path but with .json extension.
+  """Extracts metadata from JSON at path like midi_file_path but with .json extension.
   Args:
     full_file_path: the full path to the corresponding MIDI file.
 
@@ -130,8 +130,8 @@ def extract_metadata(midi_file_path):
   with open(file_name) as f:
     metadata = json.load(f)
 
-  # Update a master list of composers to be used when encoding
-  update_composer_master_list(metadata['composers'])
+  if 'composers' in metadata:
+    update_composer_master_list(metadata['composers'])
 
   return metadata
 
@@ -146,7 +146,7 @@ def update_composer_master_list(composers):
       composer_master_list.append(composer)
 
 # TODO: document this
-def  write_composer_data(file_num):
+def write_composer_data(file_num):
 
   # use alternate output_file (the given one is for the note sequences)
 
