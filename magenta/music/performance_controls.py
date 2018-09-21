@@ -780,14 +780,16 @@ class DatasetHistogramPerformanceControlSignl(PerformanceControlSignal):
 
   def __init__(self):
     """Initializes a DatasetHistogramPerformanceControlSignal."""
-    pass
+    self._encoder = self.DatasetHistogramEncoder()
  
   @property
   def default_value(self):
-    pass
+    return DEFAULT_DATASET_HISTOGRAM
 
   def validate(self, value):
-    pass
+    return (isinstance(value, list) and len(value) == 
+           len(DEFAULT_DATASET_HISTOGRAM) and
+           all(isinstance(val, numbers.Number) for val in value)))
 
   def extract(self, performance):
     """Creates dataset histogram at every event in a performance.
@@ -800,31 +802,39 @@ class DatasetHistogramPerformanceControlSignl(PerformanceControlSignal):
       A list of dataset histograms the same length as `performance`, where
       each dataset histogram is the length of the default dataset histogram.
     """
-    pass
+    dataset = performance.dataset
+    if dataset == 'yamaha':
+      histogram = [1, 0]
+    else
+      histogram = [0, 1]
+    
+    histogram_sequence = [histogram] * len(performance)
+    
+    return histogram_sequence
 
   class DatasetHistogramEncoder(encoder_decoder.EventSequenceEncoderDecoder):
     """An encoder for dataset class histogram sequences."""
 
     @property
     def input_size(self):
-      pass
+      return len(DEFAULT_DATASET_HISTOGRAM) 
 
     @property
     def num_classes(self):
-      pass
+      raise NotImplementedError
 
     @property
     def default_event_label(self):
-      pass
+      raise NotImplementedError
 
     def events_to_input(self, events, position):
-      pass
+      return events[position]
 
     def events_to_label(self, events, position):
-      pass
+      raise NotImplementedError
 
     def class_index_to_event(self, class_index, events):
-      pass
+      raise NotImplementedError
 
 
 # List of performance control signal classes.
