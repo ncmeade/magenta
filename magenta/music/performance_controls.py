@@ -36,6 +36,7 @@ DEFAULT_NOTE_DENSITY = 15.0
 DEFAULT_PITCH_HISTOGRAM = [1.0] * NOTES_PER_OCTAVE
 DEFAULT_SIGNATURE_HISTOGRAM = [0.0, 0.0, 0.0]
 DEFAULT_TIMEPLACE_VECTOR = [0.0, 0.0, 0.0]
+DEFAULT_DATASET_HISTOGRAM = [0.0, 0.0]
 
 
 # TODO: make this less hacky
@@ -277,8 +278,9 @@ class ComposerHistogramPerformanceControlSignal(PerformanceControlSignal):
           histogram sequence.
 
     Returns:
-      A list of composer class histograms the same length as `performance`, where
-      each composer class histogram is the length of the composer master-list of float values. 
+      A list of composer class histograms the same length as `performance`, 
+      where each composer class histogram is the length of the composer 
+      master-list of float values. 
       The values sum to one.
     """
     # get list of composers for the given performance
@@ -338,11 +340,7 @@ class SignatureHistogramPerformanceControlSignal(PerformanceControlSignal):
   description = "Desired weight for each time signature bin"
 
   def __init__(self):
-    """Initializes a SignatureHistogramPerformanceControlSignal.
-
-    Args:
-      
-    """
+    """Initializes a SignatureHistogramPerformanceControlSignal."""
     self._encoder = self.SignatureHistogramEncoder()
 
   @property
@@ -774,6 +772,61 @@ class PitchHistogramPerformanceControlSignal(PerformanceControlSignal):
       raise NotImplementedError
 
 
+class DatasetHistogramPerformanceControlSignl(PerformanceControlSignal):
+  """Dataset class histogram performance control signal."""
+  
+  name = 'dataset_class_histogram'
+  description = 'Desired weight for each dataset class'
+
+  def __init__(self):
+    """Initializes a DatasetHistogramPerformanceControlSignal."""
+    pass
+ 
+  @property
+  def default_value(self):
+    pass
+
+  def validate(self, value):
+    pass
+
+  def extract(self, performance):
+    """Creates dataset histogram at every event in a performance.
+
+    Args:
+      performance: A performance object for which to compute a dataset
+        class histogram sequence.
+
+    Returns:
+      A list of dataset histograms the same length as `performance`, where
+      each dataset histogram is the length of the default dataset histogram.
+    """
+    pass
+
+  class DatasetHistogramEncoder(encoder_decoder.EventSequenceEncoderDecoder):
+    """An encoder for dataset class histogram sequences."""
+
+    @property
+    def input_size(self):
+      pass
+
+    @property
+    def num_classes(self):
+      pass
+
+    @property
+    def default_event_label(self):
+      pass
+
+    def events_to_input(self, events, position):
+      pass
+
+    def events_to_label(self, events, position):
+      pass
+
+    def class_index_to_event(self, class_index, events):
+      pass
+
+
 # List of performance control signal classes.
 all_performance_control_signals = [
     NoteDensityPerformanceControlSignal,
@@ -781,5 +834,6 @@ all_performance_control_signals = [
     ComposerHistogramPerformanceControlSignal,
     SignatureHistogramPerformanceControlSignal,
     TimePlacePerformanceControlSignal,
-    GlobalPositionPerformanceControlSignal
+    GlobalPositionPerformanceControlSignal,
+    DatasetHistogramPerformanceControlSignal
 ]
