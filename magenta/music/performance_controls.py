@@ -772,7 +772,7 @@ class PitchHistogramPerformanceControlSignal(PerformanceControlSignal):
       raise NotImplementedError
 
 
-class DatasetHistogramPerformanceControlSignl(PerformanceControlSignal):
+class DatasetHistogramPerformanceControlSignal(PerformanceControlSignal):
   """Dataset class histogram performance control signal."""
   
   name = 'dataset_class_histogram'
@@ -789,7 +789,11 @@ class DatasetHistogramPerformanceControlSignl(PerformanceControlSignal):
   def validate(self, value):
     return (isinstance(value, list) and len(value) == 
            len(DEFAULT_DATASET_HISTOGRAM) and
-           all(isinstance(val, numbers.Number) for val in value)))
+           all(isinstance(val, numbers.Number) for val in value))
+
+  @property
+  def encoder(self):
+    return self._encoder
 
   def extract(self, performance):
     """Creates dataset histogram at every event in a performance.
@@ -805,7 +809,7 @@ class DatasetHistogramPerformanceControlSignl(PerformanceControlSignal):
     dataset = performance.dataset
     if dataset == 'yamaha':
       histogram = [1, 0]
-    else
+    else:
       histogram = [0, 1]
     
     histogram_sequence = [histogram] * len(performance)
