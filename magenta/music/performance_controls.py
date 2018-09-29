@@ -329,9 +329,74 @@ class PitchHistogramPerformanceControlSignal(PerformanceControlSignal):
     def class_index_to_event(self, class_index, events):
       raise NotImplementedError
 
+class MetronomePerformanceControlSignal(PerformanceControlSignal):
+  """Metronome performance control signal."""
+
+  name = 'metronome_tick'
+  description = 'Metronome tick on or off.'
+
+  def __init__(self):
+    # TODO(ncmeade): Switch this to one-hot?
+    self._encoder = self.MetronomeEncoder()
+
+  @property
+  def default_value(self):
+    return [0]
+
+  def validate(self, value):
+    return (isinstance(value, list) and len(value) == len(DEFAULT_METRONOME) and
+      all(isinstance(a, numbers.Number) for a in value))
+
+  @property
+  def encoder(self):
+    return self._encoder
+
+  def extract(self, performance):
+    # 1. For each time interval with the metronome note on, turn all
+    #    events in the interval on.
+    # 2. Strip all metronome notes from the performance.
+    steps = performance.steps
+    histogram_sequence = [[0]] * len(steps)
+
+    for i, event in enumerate(performance):
+      if (event.event_type == PerformanceEvent.NOTE_ON and
+        event.event_value == 115):
+        time_shift = steps[i]
+        indexes = [i for i, val in enumerate(steps) if val == time_shift]
+        for j in indexes:
+          histogram_sequence[j] = [1]
+
+    for i, event in enumerate(performance):
+      if (event.event_type == PerformanceEvent.NOTE_ON and
+        event.event_value == 115):
+        performance._events[i] = PerformanceEvent(
+          PerformanceEvent.NOTE_OFF, 115)
+
+    return histogram_sequence
+        
+  class MetronomeEncoder(encoder_decoder.EventSequenceEncoderDecoder):
+    
+    @property
+    def input_size(self):
+      return 1
+
+    @property
+    def default_event_label(self):
+      return NotImplementedError
+
+    def events_to_input(self, events, position):
+      return events[position]
+
+    def events_to_label(self, events, position):
+      raise NotImplementedError
+
+    def class_index_to_event(self, class_index, events):
+      raise NotImplementedError
+
 
 # List of performance control signal classes.
 all_performance_control_signals = [
     NoteDensityPerformanceControlSignal,
-    PitchHistogramPerformanceControlSignal
+    PitchHistogramPerformanceControlSignal,
+    MetronomePerformanceControlSignal
 ]
