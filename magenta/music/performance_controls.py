@@ -366,11 +366,14 @@ class MetronomePerformanceControlSignal(PerformanceControlSignal):
         for j in indexes:
           histogram_sequence[j] = [1]
 
+    # Drop the metronome events.
     for i, event in enumerate(performance):
       if (event.event_type == PerformanceEvent.NOTE_ON and
         event.event_value == 115):
-        performance._events[i] = PerformanceEvent(
-          PerformanceEvent.NOTE_OFF, 115)
+        # performance._events[i] = PerformanceEvent(
+        #  PerformanceEvent.NOTE_OFF, 115)
+        del performance._events[i]
+        del histogram_sequence[i]
 
     return histogram_sequence
         
