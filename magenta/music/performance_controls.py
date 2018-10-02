@@ -24,9 +24,11 @@ from magenta.music import constants
 from magenta.music import encoder_decoder
 from magenta.music.performance_lib import PerformanceEvent
 
+METRO_PITCH = constants.METRO_PITCH
 NOTES_PER_OCTAVE = constants.NOTES_PER_OCTAVE
 DEFAULT_NOTE_DENSITY = 15.0
 DEFAULT_PITCH_HISTOGRAM = [1.0] * NOTES_PER_OCTAVE
+DEFAULT_METRO_HISTOGRAM = [0]
 
 
 class PerformanceControlSignal(object):
@@ -332,56 +334,70 @@ class PitchHistogramPerformanceControlSignal(PerformanceControlSignal):
 class MetronomePerformanceControlSignal(PerformanceControlSignal):
   """Metronome performance control signal."""
 
-  name = 'metronome_tick'
+  name = 'metro_class_histogram'
   description = 'Metronome tick on or off.'
 
   def __init__(self):
-    # TODO(ncmeade): Switch this to one-hot?
+    """Initializes a MetronomePerformanceControlSignal."""
     self._encoder = self.MetronomeEncoder()
 
   @property
   def default_value(self):
-    return [0]
+    return DEFAULT_METRO_HISTOGRAM
 
   def validate(self, value):
-    return (isinstance(value, list) and len(value) == len(DEFAULT_METRONOME) and
-      all(isinstance(a, numbers.Number) for a in value))
+    return (isinstance(value, list) and len(value) == 
+      len(DEFAULT_METRO_HISTOGRAM) and all(isinstance(a, numbers.Number) for a 
+      in value))
 
   @property
   def encoder(self):
     return self._encoder
 
   def extract(self, performance):
-    # 1. For each time interval with the metronome note on, turn all
-    #    events in the interval on.
-    # 2. Strip all metronome notes from the performance.
+    """Computes local metronome class histogram at every event in a
+    performance.
+
+    Args:
+      performance: A Performance object for which to compute a metronome class
+        histogram sequence.
+
+    Returns:
+      A list of metronome class histograms the same length as `performance`
+      (with the metronome notes removed).
+    """
     steps = performance.steps
     histogram_sequence = [[0]] * len(steps)
 
     for i, event in enumerate(performance):
       if (event.event_type == PerformanceEvent.NOTE_ON and
-        event.event_value == 115):
+        event.event_value == METRO_PITCH):
+        # Get the time offset of the metronome tick and the indexes of
+        # all performance events with this offset.
         time_shift = steps[i]
         indexes = [i for i, val in enumerate(steps) if val == time_shift]
         for j in indexes:
           histogram_sequence[j] = [1]
 
-    # Drop the metronome events.
+    # Remove the notes used to encode the metronome ticks.
     for i, event in enumerate(performance):
       if (event.event_type == PerformanceEvent.NOTE_ON and
-        event.event_value == 115):
-        # performance._events[i] = PerformanceEvent(
-        #  PerformanceEvent.NOTE_OFF, 115)
+        event.event_value == METRO_PITCH):
+        del performance._events[i]
+        del histogram_sequence[i]
+      elif (event.event_type == PerformanceEvent.NOTE_OFF and
+        event.event_value == METRO_PITCH):
         del performance._events[i]
         del histogram_sequence[i]
 
     return histogram_sequence
         
   class MetronomeEncoder(encoder_decoder.EventSequenceEncoderDecoder):
+    """An encoder for metronome class histogram sequences."""
     
     @property
     def input_size(self):
-      return 1
+      return len(DEFAULT_METRO_HISTOGRAM)
 
     @property
     def default_event_label(self):
