@@ -231,12 +231,13 @@ class PerformanceRnnSequenceGenerator(mm.BaseSequenceGenerator):
         # entirely fill the generate section.
         break
 
-    performance.set_length(total_steps)
+    # Either trim or pad the performance.
+    # performance.set_length(total_steps)
 
     generated_sequence = performance.to_sequence(
         max_note_duration=self.max_note_duration)
 
-    assert (generated_sequence.total_time - generate_section.end_time) <= 1e-5
+    # assert (generated_sequence.total_time - generate_section.end_time) <= 1e-5
     return generated_sequence
 
 
