@@ -231,7 +231,8 @@ class PerformanceRnnSequenceGenerator(mm.BaseSequenceGenerator):
         # entirely fill the generate section.
         break
 
-    performance.set_length(total_steps)
+    # Pad or trim the performance.
+    # performance.set_length(total_steps)
 
     generated_sequence = performance.to_sequence(
         max_note_duration=self.max_note_duration)
