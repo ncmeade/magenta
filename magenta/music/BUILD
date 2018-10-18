@@ -54,6 +54,7 @@ py_library(
         ":sequence_generator_bundle",
         ":sequences_lib",
         ":testing_lib",
+        ":metronome_lib",
     ],
 )
 
@@ -760,5 +761,14 @@ py_test(
         "//magenta/common:testing_lib",
         "//magenta/protobuf:music_py_pb2",
         # tensorflow dep
+    ],
+)
+
+py_library(
+    name = "metronome_lib",
+    srcs = ["metronome_lib.py"],
+    srcs_version = "PY2AND3",
+    deps = [
+      # dep
     ],
 )
