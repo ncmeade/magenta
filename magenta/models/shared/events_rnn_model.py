@@ -332,38 +332,8 @@ class EventSequenceRnnModel(mm.BaseModel):
       inputs = self._config.encoder_decoder.get_inputs_batch(
           event_sequences, full_length=True)
 
-    # event_sequences: The performance's events so far.
-    # inpus: The input to the next event to be generated.
-    def test(encoder_decoder, event_sequences, inputs):
-      
-      if event_sequences[0][-1].event_type == PerformanceEvent.TIME_SHIFT:
-        
-        upper_bound = 1000 * math.ceil(test.time_in_perf/1000 + 0.00001)
-
-        # The new event exceeds the next metronome tick.
-        if (test.time_in_perf + event_sequences[0][-1].event_value > upper_bound
-            and upper_bound != 0):
-
-          #print('upper_bound={}\ntime_shift={}\ntime_in_perf={}\n\n'.format(
-          #  upper_bound, upper_bound - test.time_in_perf, test.time_in_perf))
-          event_sequences[0]._events[-1] = PerformanceEvent(
-            PerformanceEvent.TIME_SHIFT, upper_bound - test.time_in_perf)
-          hot_idx = encoder_decoder._target_encoder_decoder._one_hot_encoding.encode_event(
-            event_sequences[0]._events[-1])
-
-          new_input = [0] * encoder_decoder.num_classes
-          new_input[hot_idx] = 1
-
-          new_input = [1] + new_input
-
-          inputs[0][0] = new_input
-         
-
-        test.time_in_perf += event_sequences[0][-1].event_value
-
-    test.time_in_perf = 0
-
-    modify_events_callback = test
+    mm.metronome_callback.time_in_perf = 0
+    modify_events_callback = mm.metronome_callback
     if modify_events_callback:
       # Modify event sequences and inputs for first step after primer.
       modify_events_callback(

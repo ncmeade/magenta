@@ -769,6 +769,6 @@ py_library(
     srcs = ["metronome_lib.py"],
     srcs_version = "PY2AND3",
     deps = [
-      # dep
+      ":performance_lib",
     ],
 )
