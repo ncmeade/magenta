@@ -246,6 +246,8 @@ class BasePerformance(events_lib.EventSequence):
         strs.append('(%s, SHIFT)' % event.event_value)
       elif event.event_type == PerformanceEvent.VELOCITY:
         strs.append('(%s, VELOCITY)' % event.event_value)
+      elif event.event_type == PerformanceEvent.METRO:
+        strs.append('(%s, METRO)' % event.event_value)
       else:
         raise ValueError('Unknown event type: %s' % event.event_type)
     return '\n'.join(strs)
@@ -379,17 +381,17 @@ class BasePerformance(events_lib.EventSequence):
                                event_value=current_velocity_bin))
 
       # Add a performance event for this note on/off or metronome tick.
-      if sorted_notes[idx].pitch == constants.METRO_PITCH:
-        event_type = PerformanceEvent.METRO
-        performance_events.append(
-          PerformanceEvent(event_type=event_type,
-                           event_value=1))
-      else:
-        event_type = (PerformanceEvent.NOTE_OFF if is_offset
-                      else PerformanceEvent.NOTE_ON)
-        performance_events.append(
-          PerformanceEvent(event_type=event_type,
-                           event_value=sorted_notes[idx].pitch))
+      # if sorted_notes[idx].pitch == constants.METRO_PITCH:
+      #  event_type = PerformanceEvent.METRO
+      #  performance_events.append(
+      #    PerformanceEvent(event_type=event_type,
+      #                     event_value=1))
+      # else:
+      event_type = (PerformanceEvent.NOTE_OFF if is_offset
+                    else PerformanceEvent.NOTE_ON)
+      performance_events.append(
+        PerformanceEvent(event_type=event_type,
+                         event_value=sorted_notes[idx].pitch))
 
     return performance_events
 
@@ -472,6 +474,8 @@ class BasePerformance(events_lib.EventSequence):
         assert self._num_velocity_bins
         velocity = (
             MIN_MIDI_VELOCITY + (event.event_value - 1) * velocity_bin_size)
+      elif event.event_type == PerformanceEvent.METRO:
+        tf.logging.debug('METRO event in output sequence.')
       else:
         raise ValueError('Unknown event type: %s' % event.event_type)
 
