@@ -24,9 +24,6 @@ def metronome_callback(encoder_decoder, event_sequences, inputs):
     if (metronome_callback.time_in_perf + event_sequences[0][-1].event_value
         >= upper_bound and upper_bound != 0):
 
-      # print('upper_bound={}\ntime_shift={}\ntime_in_perf={}\n\n'.format(
-      #      upper_bound, upper_bound - metronome_callback.time_in_perf, metronome_callback.time_in_perf))
-      
       # Trim the input event.
       event_sequences[0][-1].event_value = (upper_bound -
                                             metronome_callback.time_in_perf)

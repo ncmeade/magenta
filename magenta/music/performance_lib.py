@@ -54,9 +54,11 @@ class PerformanceEvent(object):
   TIME_SHIFT = 3
   # Change current velocity.
   VELOCITY = 4
+  # Metronome tick.
+  METRO = 5
 
   def __init__(self, event_type, event_value):
-    if not PerformanceEvent.NOTE_ON <= event_type <= PerformanceEvent.VELOCITY:
+    if not PerformanceEvent.NOTE_ON <= event_type <= PerformanceEvent.METRO:
       raise ValueError('Invalid event type: %s' % event_type)
 
     if (event_type == PerformanceEvent.NOTE_ON or
@@ -376,10 +378,16 @@ class BasePerformance(events_lib.EventSequence):
               PerformanceEvent(event_type=PerformanceEvent.VELOCITY,
                                event_value=current_velocity_bin))
 
-      # Add a performance event for this note on/off.
-      event_type = (PerformanceEvent.NOTE_OFF if is_offset
-                    else PerformanceEvent.NOTE_ON)
-      performance_events.append(
+      # Add a performance event for this note on/off or metronome tick.
+      if sorted_notes[idx].pitch == constants.METRO_PITCH:
+        event_type = PerformanceEvent.METRO
+        performance_events.append(
+          PerformanceEvent(event_type=event_type,
+                           event_value=1))
+      else:
+        event_type = (PerformanceEvent.NOTE_OFF if is_offset
+                      else PerformanceEvent.NOTE_ON)
+        performance_events.append(
           PerformanceEvent(event_type=event_type,
                            event_value=sorted_notes[idx].pitch))
 
