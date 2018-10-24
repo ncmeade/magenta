@@ -291,7 +291,7 @@ class PerformanceOneHotEncoding(encoder_decoder.OneHotEncoding):
           (PerformanceEvent.VELOCITY, 1, num_velocity_bins))
 
     self._event_ranges.append(
-      (PerformanceEvent.METRO, 1, 1))
+      (PerformanceEvent.METRONOME, 1, 1))
 
     self._max_shift_steps = max_shift_steps
 

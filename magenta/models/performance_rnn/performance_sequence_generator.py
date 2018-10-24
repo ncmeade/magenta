@@ -142,7 +142,8 @@ class PerformanceRnnSequenceGenerator(mm.BaseSequenceGenerator):
         'temperature': lambda arg: arg.float_value,
         'beam_size': lambda arg: arg.int_value,
         'branch_factor': lambda arg: arg.int_value,
-        'steps_per_iteration': lambda arg: arg.int_value
+        'steps_per_iteration': lambda arg: arg.int_value,
+        'metronome_bpm': lambda arg: arg.int_value
     }
     if self.control_signals:
       for control in self.control_signals:

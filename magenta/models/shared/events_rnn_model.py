@@ -253,7 +253,8 @@ class EventSequenceRnnModel(mm.BaseModel):
                        control_events=None, control_state=None,
                        extend_control_events_callback=(
                            _extend_control_events_default),
-                       modify_events_callback=None):
+                       modify_events_callback=None,
+                       metronome_bpm=None):
     """Generate an event sequence from a primer sequence.
 
     Args:
@@ -288,6 +289,8 @@ class EventSequenceRnnModel(mm.BaseModel):
           None, will be called with 3 arguments after every event: the current
           EventSequenceEncoderDecoder, a list of current EventSequences, and a
           list of current encoded event inputs.
+      metronome_bpm: Optional frequency of the metronome used to condition
+          the generation of the performance.
 
     Returns:
       The generated event sequence (which begins with the provided primer).
@@ -332,8 +335,10 @@ class EventSequenceRnnModel(mm.BaseModel):
       inputs = self._config.encoder_decoder.get_inputs_batch(
           event_sequences, full_length=True)
 
-    mm.metronome_callback.time_in_perf = 0
-    modify_events_callback = mm.metronome_callback
+    if metronome_bpm is not None:
+      metronome_generator = mm.MetronomeGenerator(metronome_bpm)
+      modify_events_callback = metronome_generator.metronome_callback
+
     if modify_events_callback:
       # Modify event sequences and inputs for first step after primer.
       modify_events_callback(

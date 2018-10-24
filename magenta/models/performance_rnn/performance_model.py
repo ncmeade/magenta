@@ -38,7 +38,7 @@ class PerformanceRnnModel(events_rnn_model.EventSequenceRnnModel):
   def generate_performance(
       self, num_steps, primer_sequence, temperature=1.0, beam_size=1,
       branch_factor=1, steps_per_iteration=1, control_signal_fns=None,
-      disable_conditioning_fn=None):
+      disable_conditioning_fn=None, metronome_bpm=None):
     """Generate a performance track from a primer performance track.
 
     Args:
@@ -58,6 +58,8 @@ class PerformanceRnnModel(events_rnn_model.EventSequenceRnnModel):
       disable_conditioning_fn: A function that maps time step to whether or not
           conditioning should be disabled, or None if there is no conditioning
           or conditioning is not optional.
+      metronome_bpm: Optional frequency of the metronome to use to condition
+          the generation of the performance.
 
     Returns:
       The generated Performance object (which begins with the provided primer
@@ -81,7 +83,8 @@ class PerformanceRnnModel(events_rnn_model.EventSequenceRnnModel):
         num_steps, primer_sequence, temperature, beam_size, branch_factor,
         steps_per_iteration, control_events=control_events,
         control_state=control_state,
-        extend_control_events_callback=extend_control_events_callback)
+        extend_control_events_callback=extend_control_events_callback,
+        metronome_bpm=metronome_bpm)
 
   def performance_log_likelihood(self, sequence, control_values,
                                  disable_conditioning):

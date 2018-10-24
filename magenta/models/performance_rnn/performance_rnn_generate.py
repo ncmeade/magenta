@@ -107,6 +107,10 @@ tf.app.flags.DEFINE_string(
     'Comma-separated list of `name=value` pairs. For each pair, the value of '
     'the hyperparameter named `name` is set to `value`. This mapping is merged '
     'with the default hyperparameters.')
+tf.app.flags.DEFINE_string(
+    'metronome_bpm', None,
+    'The metronome frequency (in BPM) to condition the performance generation'
+    ' with.')
 
 # Add flags for all performance control signals.
 for control_signal_cls in magenta.music.all_performance_control_signals:
@@ -235,6 +239,9 @@ def run_with_flags(generator):
   generator_options.args['branch_factor'].int_value = FLAGS.branch_factor
   generator_options.args[
       'steps_per_iteration'].int_value = FLAGS.steps_per_iteration
+
+  if FLAGS.metronome_bpm is not None:
+    generator_options.args['metronome_bpm'].int_value = int(FLAGS.metronome_bpm)
 
   tf.logging.debug('primer_sequence: %s', primer_sequence)
   tf.logging.debug('generator_options: %s', generator_options)
