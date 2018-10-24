@@ -90,4 +90,4 @@ NOTE_KEYS = [
 ]
 
 # The pitch used to encode metronome ticks.
-METRO_PITCH = 115
+METRONOME_PITCH = 115
