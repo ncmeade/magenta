@@ -246,8 +246,8 @@ class BasePerformance(events_lib.EventSequence):
         strs.append('(%s, SHIFT)' % event.event_value)
       elif event.event_type == PerformanceEvent.VELOCITY:
         strs.append('(%s, VELOCITY)' % event.event_value)
-      elif event.event_type == PerformanceEvent.METRO:
-        strs.append('(%s, METRO)' % event.event_value)
+      elif event.event_type == PerformanceEvent.METRONOME:
+        strs.append('(%s, METRONOME)' % event.event_value)
       else:
         raise ValueError('Unknown event type: %s' % event.event_type)
     return '\n'.join(strs)
@@ -474,7 +474,7 @@ class BasePerformance(events_lib.EventSequence):
         assert self._num_velocity_bins
         velocity = (
             MIN_MIDI_VELOCITY + (event.event_value - 1) * velocity_bin_size)
-      elif event.event_type == PerformanceEvent.METRO:
+      elif event.event_type == PerformanceEvent.METRONOME:
         tf.logging.debug('METRO event in output sequence.')
       else:
         raise ValueError('Unknown event type: %s' % event.event_type)

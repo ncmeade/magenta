@@ -10,7 +10,7 @@ class MetronomeGenerator():
     self.metronome_bpm = metronome_bpm
     self.time_in_perf = 0
 
-  def metronome_callback(encoder_decoder, event_sequences, inputs):
+  def metronome_callback(self, encoder_decoder, event_sequences, inputs):
     if event_sequences[0][-1].event_type == PerformanceEvent.TIME_SHIFT:
       upper_bound = 100 * math.ceil(self.time_in_perf / 100 + 0.01)
 
