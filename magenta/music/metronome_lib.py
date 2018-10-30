@@ -19,6 +19,7 @@ class MetronomeGenerator():
     """
     self.metronome_bpm = metronome_bpm
     self.time_in_perf = 0
+    self.prev_event_was_metronome = False
 
 
   def _get_next_metronome_signal_time(self):
@@ -52,6 +53,27 @@ class MetronomeGenerator():
         events in a performance.
       inputs: A Python list of model inputs.
     """
+    if self.prev_event_was_metronome:
+      event_sequences[0][-1].event_type = PerformanceEvent.TIME_SHIFT
+      event_sequences[0][-1].event_value = 10
+
+      hot_idx = (
+        encoder_decoder
+        ._target_encoder_decoder
+        ._one_hot_encoding
+        .encode_event(event_sequences[0][-1]))
+
+      new_input = [0] * encoder_decoder.num_classes
+      new_input[hot_idx] = 1
+      new_input = [1] + new_input
+
+      inputs[0][0] = new_input
+
+      self.prev_event_was_metronome = False
+      self.time_in_perf += event_sequences[0][-1].event_value
+
+      return
+
     if event_sequences[0][-1].event_type == PerformanceEvent.TIME_SHIFT:
       next_metronome_time = self._get_next_metronome_signal_time()
 
@@ -70,9 +92,11 @@ class MetronomeGenerator():
 
         new_input = [0] * encoder_decoder.num_classes
         new_input[hot_idx] = 1
-        new_input = [1] + new_input
+        new_input = [0] + new_input
 
         inputs[0][0] = new_input
+
+        self.prev_event_was_metronome = True
 
       self.time_in_perf += event_sequences[0][-1].event_value
     
