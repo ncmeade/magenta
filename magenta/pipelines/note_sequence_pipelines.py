@@ -167,10 +167,6 @@ class TranspositionPipeline(NoteSequencePipeline):
     self._min_pitch = min_pitch
     self._max_pitch = max_pitch
 
-    # Temporary changes for testing.
-    self._min_pitch = 21
-    self._max_pitch = 108
-
   def transform(self, sequence):
     stats = dict([(state_name, statistics.Counter(state_name)) for state_name in
                   ['skipped_due_to_range_exceeded',
