@@ -167,10 +167,6 @@ class TranspositionPipeline(NoteSequencePipeline):
     self._min_pitch = min_pitch
     self._max_pitch = max_pitch
 
-    # Temporary changes for testing.
-    self._min_pitch = 21
-    self._max_pitch = 108
-
   def transform(self, sequence):
     stats = dict([(state_name, statistics.Counter(state_name)) for state_name in
                   ['skipped_due_to_range_exceeded',
@@ -202,7 +198,6 @@ class TranspositionPipeline(NoteSequencePipeline):
     for note in ts.notes:
       if not note.is_drum and note.pitch != constants.METRONOME_PITCH:
         note.pitch += amount
-        # Temporary changes for testing.
         if note.pitch < self._min_pitch or note.pitch > self._max_pitch:
           stats['skipped_due_to_range_exceeded'].increment()
           return None
