@@ -393,6 +393,17 @@ class BasePerformance(events_lib.EventSequence):
         PerformanceEvent(event_type=event_type,
                          event_value=sorted_notes[idx].pitch))
 
+
+    for i, event in enumerate(performance_events):
+      if (event.event_type == PerformanceEvent.NOTE_ON and
+          event.event_value == constants.METRONOME_PITCH):
+        performance_events[i] = PerformanceEvent(PerformanceEvent.METRONOME, 0)
+
+
+    performance_events = [event for event in performance_events if
+                          event.event_type != PerformanceEvent.NOTE_OFF and
+                          event.event_value != constants.METRONOME_PITCH]
+      
     return performance_events
 
   @abc.abstractmethod

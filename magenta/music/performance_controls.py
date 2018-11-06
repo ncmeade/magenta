@@ -383,10 +383,6 @@ class MetronomePerformanceControlSignal(PerformanceControlSignal):
           if performance[j].event_type == PerformanceEvent.TIME_SHIFT:
             histogram_sequence[j] = [1]
 
-    for i, event in enumerate(performance):
-      print(event, performance.steps[i], histogram_sequence[i])
-    exit(0)
-
     # Remove the notes used to encode the metronome ticks.
     for i, event in enumerate(performance):
       if (event.event_type == PerformanceEvent.NOTE_ON and
