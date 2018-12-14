@@ -432,4 +432,7 @@ message SequenceMetadata {
 
   // The dataset the sample was obtained from
   string dataset = 9;
+
+  // If the piece has an accompanying tempo conditioning signal
+  int32 tempo_flag = 10;
 }

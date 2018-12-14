@@ -420,6 +420,7 @@ default_configs = {
             learning_rate=0.001),
         num_velocity_bins=32,
         control_signals=[
-            magenta.music.DatasetHistogramPerformanceControlSignal()
+            magenta.music.DatasetHistogramPerformanceControlSignal(),
+            magenta.music.TempoConditioningFlag()
         ])
 }

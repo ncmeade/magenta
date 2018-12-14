@@ -98,6 +98,7 @@ from magenta.music.performance_controls import SignatureHistogramPerformanceCont
 from magenta.music.performance_controls import TimePlacePerformanceControlSignal
 from magenta.music.performance_controls import GlobalPositionPerformanceControlSignal
 from magenta.music.performance_controls import DatasetHistogramPerformanceControlSignal
+from magenta.music.performance_controls import TempoConditioningFlag 
 
 from magenta.music.performance_encoder_decoder import ModuloPerformanceEventSequenceEncoderDecoder
 from magenta.music.performance_encoder_decoder import PerformanceModuloEncoding

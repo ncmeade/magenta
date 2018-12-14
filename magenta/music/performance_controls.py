@@ -841,6 +841,72 @@ class DatasetHistogramPerformanceControlSignal(PerformanceControlSignal):
       raise NotImplementedError
 
 
+class TempoConditioningFlag(PerformanceControlSignal):
+  """Binary flag indicating if a tempo conditioning signal is currently
+  being provided; `[1]` if a tempo conditioning signal is present, `[0]`
+  otherwise.
+  """
+  name = 'tempo_flag'
+  description = ('Flag indicating if a tempo conditioning signal is '
+                 'currently being provided.')
+
+  def __init__(self):
+    """Initializes a TempoConditioningFlag."""
+    self._encoder = self.TempoConditioningFlagEncoder()
+ 
+  @property
+  def default_value(self):
+    return [0]
+
+  def validate(self, value):
+    return (isinstance(value, list) and 
+            len(value) == 1 and
+            all(isinstance(val, numbers.Number) for val in value))
+
+  @property
+  def encoder(self):
+    return self._encoder
+
+  def extract(self, performance):
+    """Creates a tempo conditioning flag for each event in a performance.
+
+    Args:
+      performance: performance_lib.Performance object to compute sequence
+        of tempo conditioning flags for.
+
+    Returns:
+      List of tempo conditioning flags with the same length as `performance`.
+    """
+    tempo_flag = [1] if performance.tempo_flag else [0]
+    return [tempo_flag] * len(performance)
+
+  class TempoConditioningFlagEncoder(
+    encoder_decoder.EventSequenceEncoderDecoder):
+    """Encoder for TempoConditioningFlag."""
+
+    @property
+    def input_size(self):
+      # Single bit flag.
+      return 1
+
+    @property
+    def num_classes(self):
+      raise NotImplementedError
+
+    @property
+    def default_event_label(self):
+      raise NotImplementedError
+
+    def events_to_input(self, events, position):
+      return events[position]
+    
+    def events_to_label(self, events, position):
+      raise NotImplementedError
+
+    def class_index_to_event(self, class_index, events):
+      raise NotImplementedError
+
+
 # List of performance control signal classes.
 all_performance_control_signals = [
     NoteDensityPerformanceControlSignal,
@@ -849,5 +915,6 @@ all_performance_control_signals = [
     SignatureHistogramPerformanceControlSignal,
     TimePlacePerformanceControlSignal,
     GlobalPositionPerformanceControlSignal,
-    DatasetHistogramPerformanceControlSignal
+    DatasetHistogramPerformanceControlSignal,
+    TempoConditioningFlag
 ]
