@@ -590,6 +590,9 @@ class Performance(BasePerformance):
       self._steps_per_second = steps_per_second
       self._events = []
 
+    #TODO(ncmeade): To be implemented correctly later.
+    self.tempos = quantized_sequence.tempos
+
     super(Performance, self).__init__(
         start_step=start_step,
         num_velocity_bins=num_velocity_bins,

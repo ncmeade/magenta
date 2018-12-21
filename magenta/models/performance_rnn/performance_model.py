@@ -421,6 +421,7 @@ default_configs = {
         num_velocity_bins=32,
         control_signals=[
             magenta.music.DatasetHistogramPerformanceControlSignal(),
-            magenta.music.TempoConditioningFlag()
+            magenta.music.TempoConditioningFlag(),
+            magenta.music.TempoControlSignal()
         ])
 }
