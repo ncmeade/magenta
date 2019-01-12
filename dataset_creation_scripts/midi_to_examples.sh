@@ -4,7 +4,7 @@
 # -----------------------------------------------------------------------------
 
 if (( $# < 3 )); then
-	echo "Usage: $0 <num processess> <dir_of_midis> <output_dir> "
+	echo "Usage: $0 <num processess> <dir_of_midis> <output_dir> <config> <temp>."
 	exit 1
 elif (( $1 < 1 )); then
 	echo "Error: Must specify at least 1 job"
@@ -14,7 +14,8 @@ fi
 PROCESSES=$1
 INPUT_DIRECTORY=$2
 OUTPUT_DIRECTORY=$3
-TEMP_DIR=~/temp_script_files
+CONFIG=$4
+TEMP_DIR=~/$5
 TEMP_DIR_IN=$TEMP_DIR/all_inputs
 TEMP_DIR_OUT=$TEMP_DIR/all_outputs
 TEMP_DIR_OUT_NS=$TEMP_DIR_OUT/all_notesequences
@@ -73,7 +74,7 @@ echo "Creating sequenceexamples . . ."
 while (( $i < $PROCESSES )); do
 
 	# Note: this runs in the background
-	./dataset_creation_scripts/tfrecord_to_examples.sh $TEMP_DIR_OUT_NS/notesequences${i}.tfrecord $TEMP_DIR_OUT_EX/sequenceexamples${i}&
+	./dataset_creation_scripts/tfrecord_to_examples.sh $TEMP_DIR_OUT_NS/notesequences${i}.tfrecord $TEMP_DIR_OUT_EX/sequenceexamples${i} ${CONFIG}&
 
 	(( i++ ))
 done
@@ -98,10 +99,3 @@ done
 
 # Clean up
 rm -r $TEMP_DIR
-rm ~/magenta/nohup.out
-
-
-
-
-
-
