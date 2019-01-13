@@ -44,6 +44,8 @@ tf.app.flags.DEFINE_string('output_file', None,
                            'if it already exists.')
 tf.app.flags.DEFINE_bool('recursive', False,
                          'Whether or not to recurse into subdirectories.')
+tf.app.flags.DEFINE_bool('has_tempo', False,
+                         'Whether or not the files have tempo information.')
 tf.app.flags.DEFINE_integer('num_threads', 1,
                             'Number of worker threads to run in parallel.')
 tf.app.flags.DEFINE_string('log', 'INFO',
@@ -133,6 +135,7 @@ def convert_midi(root_dir, sub_dir, full_file_path):
         full_file_path, e)
     return None
   sequence.collection_name = os.path.basename(root_dir)
+  sequence.has_tempo = FLAGS.has_tempo
   sequence.filename = os.path.join(sub_dir, os.path.basename(full_file_path))
   sequence.id = note_sequence_io.generate_note_sequence_id(
       sequence.filename, sequence.collection_name, 'midi')

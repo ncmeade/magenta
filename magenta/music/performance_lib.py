@@ -551,6 +551,9 @@ class Performance(BasePerformance):
         program=program,
         is_drum=is_drum)
 
+    if quantized_sequence.has_tempo:
+      self.tempos = quantized_sequence.tempos
+
   @property
   def steps_per_second(self):
     return self._steps_per_second

@@ -329,9 +329,86 @@ class PitchHistogramPerformanceControlSignal(PerformanceControlSignal):
     def class_index_to_event(self, class_index, events):
       raise NotImplementedError
 
+class TempoControlSignal(PerformanceControlSignal):
+  """Tempo control signal."""
+
+  name = 'tempo_signal'
+  description = 'Tempo conditioning signal.'
+
+  def __init__(self):
+    """Initializes a TempoControlSignal."""
+    self._encoder = self.TempoControlSignalEncoder()
+
+  @property
+  def default_value(self):
+    return [0]
+
+  def validate(self, value):
+    return (isinstance(value, list) and
+            len(value) == 1 and
+            all(isinstance(val, numbers.Number) for val in value))
+
+  @property
+  def encoder(self):
+    return self._encoder
+
+  def extract(self, performance):
+    """Computes local tempo control signal at each event in a performance.
+
+    Params:
+      performance: performance_lib.Performance object for which to compute
+        the control signals for.
+
+    Returns:
+      A list of control signals the same length as `performance`.
+    """
+    signals = [[0]] * len(performance.steps)
+
+    for i, event in enumerate(performance):
+      time_shift = performance.steps[i]
+      indexes = [i for i, val in enumerate(performance.steps) 
+        if val == time_shift]
+
+      # Convert the time_shift from performance representation to seconds.
+      time_shift *= 10
+      time_shift /= 1000
+
+      possible_tempos = list(filter(lambda t: t.time <= time_shift,
+        performance.tempos))
+
+      #TODO(ncmeade): Compute statistics and pass in. Currently hard coded
+      # with values for Piano-midi dataset.
+      scalar_tempo = (possible_tempos[-1].qpm - 7.61) / (283.97 - 7.61)
+
+      for j in indexes:
+        signals[j] = [scalar_tempo]
+
+      return signals
+
+  class TempoControlSignalEncoder(encoder_decoder.EventSequenceEncoderDecoder):
+    """Encoder for TempoControl signal."""
+
+    @property
+    def input_size(self):
+      return 1
+
+    @property
+    def default_event_label(self):
+      return NotImplementedError
+
+    def events_to_input(self, events, position):
+      return events[position]
+
+    def events_to_label(self, events, position):
+      raise NotImplementedError
+
+    def class_index_to_event(self, class_index, events):
+      raise NotImplementedError
+
 
 # List of performance control signal classes.
 all_performance_control_signals = [
     NoteDensityPerformanceControlSignal,
-    PitchHistogramPerformanceControlSignal
+    PitchHistogramPerformanceControlSignal,
+    TempoControlSignal
 ]
