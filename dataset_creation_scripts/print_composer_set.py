@@ -1,4 +1,5 @@
-import os, glob
+import os
+import glob
 import json
 import argparse
 
@@ -44,4 +45,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
