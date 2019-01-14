@@ -97,10 +97,6 @@ message NoteSequence {
   // Sequence metadata.
   SequenceMetadata sequence_metadata = 19;
 
-  // Flag indicating whether the MIDI has valid tempo information.
-  // Not all MIDI files are annotated with tempo information.
-  bool has_tempo = 22;
-
   // Next tag: 15
   message Note {
     // MIDI pitch; see en.wikipedia.org/wiki/MIDI_Tuning_Standard for details.
@@ -420,4 +416,7 @@ message SequenceMetadata {
 
   // Composer of the sequece. Some pieces have multiple composers.
   repeated string composers = 4;
+
+  // The dataset the sequence was drawn from.
+  string dataset = 5;
 }

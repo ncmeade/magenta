@@ -329,6 +329,75 @@ class PitchHistogramPerformanceControlSignal(PerformanceControlSignal):
     def class_index_to_event(self, class_index, events):
       raise NotImplementedError
 
+
+class DatasetControlSignal(PerformanceControlSignal):
+  """Dataset control signal."""
+
+  name = 'dataset_signal'
+  description = 'Dataset conditioning signal.'
+
+  def __init__(self):
+    """Initializes a DatasetControlSignal."""
+    self._encoder = self.DatasetControlSignalEncoder()
+
+  @property
+  def default_value(self):
+    return DEFAULT_DATASET_SIGNAL
+
+  def validate(self, value):
+    return (isinstance(value, list) and
+            len(value) == len(DEFAULT_DATASET_HISTOGRAM) and
+            all(isinstance(val, numbers.Number) for val in value))
+
+  @property
+  def encoder(self):
+    return self._encoder
+
+  def extract(self, performance):
+    """Computes the local dataset control signal at each event in a
+    performance.
+
+    Params:
+      performance: performance_lib.Performance object for which to compute
+        the control signal for.
+
+    Returns:
+      A list of control signals the same length as `performance`.
+    """
+    if performance.metadata.dataset == 'yamaha':
+      signal = [1, 0]
+    else:
+      signal = [0, 1]
+
+    signals = [signal] * len(performance)
+
+    return signals
+
+  class DatasetControlSignalEncoder(encoder_decoder.EventSequenceEncoderDecoder):
+    """Encoder for DatasetControlSignal."""
+
+    @property
+    def input_size(self):
+      return len(DEFAULT_DATASET_SIGNAL)
+
+    @property
+    def num_classes(self):
+      raise NotImplementedError
+
+    @property
+    def default_event_label(self):
+      raise NotImplementedError
+
+    def events_to_input(self, events, position):
+      return events[position]
+
+    def events_to_label(self, events, position):
+      raise NotImplementedError
+
+    def class_index_to_event(self, class_index, events):
+      raise NotImplementedError
+
+
 class TempoControlSignal(PerformanceControlSignal):
   """Tempo control signal."""
 
@@ -410,5 +479,6 @@ class TempoControlSignal(PerformanceControlSignal):
 all_performance_control_signals = [
     NoteDensityPerformanceControlSignal,
     PitchHistogramPerformanceControlSignal,
-    TempoControlSignal
+    TempoControlSignal,
+    DatasetControlSignal
 ]
