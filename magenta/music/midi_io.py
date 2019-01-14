@@ -48,7 +48,7 @@ class MIDIConversionError(Exception):
   pass
 
 
-def midi_to_sequence_proto(midi_data):
+def midi_to_sequence_proto(midi_data, metadata=None):
   """Convert MIDI file contents to a tensorflow.magenta.NoteSequence proto.
 
   Converts a MIDI file encoded as a string into a
@@ -59,6 +59,7 @@ def midi_to_sequence_proto(midi_data):
   Args:
     midi_data: A string containing the contents of a MIDI file or populated
         pretty_midi.PrettyMIDI object.
+    metadata: Metadata describing the MIDI file.
 
   Returns:
     A tensorflow.magenta.NoteSequence proto.
@@ -83,6 +84,10 @@ def midi_to_sequence_proto(midi_data):
   # pylint: enable=bare-except
 
   sequence = music_pb2.NoteSequence()
+
+  # Populate metadata.
+  if metadata is not None:
+    sequence.sequence_metadata.dataset = metadata['dataset']
 
   # Populate header.
   sequence.ticks_per_quarter = midi.resolution

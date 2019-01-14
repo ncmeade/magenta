@@ -539,6 +539,9 @@ class Performance(BasePerformance):
           max_shift_steps=max_shift_steps, instrument=instrument)
       program, is_drum = self._program_and_is_drum_from_sequence(
           quantized_sequence, instrument)
+      # We use tempos and metadata for creating conditioning signals.
+      self.tempos = quantized_sequence.tempos
+      self.metadata = quantized_sequence.sequence_metadata
 
     else:
       self._steps_per_second = steps_per_second
@@ -632,6 +635,9 @@ class MetricPerformance(BasePerformance):
           instrument=instrument)
       program, is_drum = self._program_and_is_drum_from_sequence(
           quantized_sequence, instrument)
+      # We use tempos and metadata for creating conditioning signals.
+      self.tempos = quantized_sequence.tempos
+      self.metadata = quantized_sequence.sequence_metadata
 
     else:
       self._steps_per_quarter = steps_per_quarter

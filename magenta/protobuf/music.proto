@@ -416,4 +416,7 @@ message SequenceMetadata {
 
   // Composer of the sequece. Some pieces have multiple composers.
   repeated string composers = 4;
+
+  // The dataset the sequence was drawn from.
+  string dataset = 5;
 }

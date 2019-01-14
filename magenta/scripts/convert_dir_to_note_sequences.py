@@ -26,6 +26,7 @@ Example usage:
 """
 
 import os
+import json
 
 # internal imports
 import tensorflow as tf
@@ -77,7 +78,8 @@ def convert_files(root_dir, sub_dir, writer, recursive=False):
     if (full_file_path.lower().endswith('.mid') or
         full_file_path.lower().endswith('.midi')):
       try:
-        sequence = convert_midi(root_dir, sub_dir, full_file_path)
+        metadata = extract_metadata(full_file_path)
+        sequence = convert_midi(root_dir, sub_dir, full_file_path, metadata)
       except Exception as exc:  # pylint: disable=broad-except
         tf.logging.fatal('%r generated an exception: %s', full_file_path, exc)
         continue
@@ -101,6 +103,8 @@ def convert_files(root_dir, sub_dir, writer, recursive=False):
       if sequences:
         for sequence in sequences:
           writer.write(sequence)
+    elif full_file_path.lower().endswith('.json'):
+      tf.logging.info('JSON file detected: %s.', full_file_path)  
     else:
       if recursive and tf.gfile.IsDirectory(full_file_path):
         recurse_sub_dirs.append(os.path.join(sub_dir, file_in_dir))
@@ -112,7 +116,7 @@ def convert_files(root_dir, sub_dir, writer, recursive=False):
     convert_files(root_dir, recurse_sub_dir, writer, recursive)
 
 
-def convert_midi(root_dir, sub_dir, full_file_path):
+def convert_midi(root_dir, sub_dir, full_file_path, metadata=None):
   """Converts a midi file to a sequence proto.
 
   Args:
@@ -120,13 +124,15 @@ def convert_midi(root_dir, sub_dir, full_file_path):
         converted.
     sub_dir: The directory being converted currently.
     full_file_path: the full path to the file to convert.
+    metadata: Optional dict of metadata on the MIDI file.
 
   Returns:
     Either a NoteSequence proto or None if the file could not be converted.
   """
   try:
     sequence = midi_io.midi_to_sequence_proto(
-        tf.gfile.FastGFile(full_file_path, 'rb').read())
+        tf.gfile.FastGFile(full_file_path, 'rb').read(),
+        metadata)
   except midi_io.MIDIConversionError as e:
     tf.logging.warning(
         'Could not parse MIDI file %s. It will be skipped. Error was: %s',
@@ -202,6 +208,30 @@ def convert_abc(root_dir, sub_dir, full_file_path):
     sequences.append(tune)
     tf.logging.info('Converted ABC file %s.', full_file_path)
   return sequences
+
+
+def extract_metadata(full_file_path):
+  """Extracts the metadata for a MIDI file.
+
+  The metadata is at a path like `full_file_path` but with a `.json`
+  extension.
+
+  Args:
+    full_file_path: The full path to the MIDI file.
+
+  Returns:
+    A dict of metadata, or None if the metadata file does not exist.
+  """
+  metadata_file_name = os.path.splitext(full_file_path)[0] + '.json'
+
+  if os.path.exists(metadata_file_name):
+    tf.logging.info('Extracting metadata for %s.', full_file_path)    
+    with open(metadata_file_name) as f:
+      metadata = json.load(f)
+    return metadata
+  else:
+    tf.logging.warning('Metadata not found for %s.', full_file_path)
+    return None
 
 
 def convert_directory(root_dir, output_file, recursive=False):
