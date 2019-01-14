@@ -50,8 +50,9 @@ i=0
 
 for FILE in $INPUT_DIRECTORY/*.mid
 do
-	ln $FILE $TEMP_DIR_IN/inputs$(( i % PROCESSES ))/`basename "$FILE"`
-
+  filename="${FILE%.*}"
+  ln $FILE $TEMP_DIR_IN/inputs$(( i % PROCESSES ))/`basename "$FILE"`
+  ln ${filename}.json $TEMP_DIR_IN/inputs$(( i % PROCESSES ))/`basename ${filename}.json`
 	(( i++ ))
 done
 
