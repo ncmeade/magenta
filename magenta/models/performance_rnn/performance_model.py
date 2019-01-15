@@ -23,6 +23,7 @@ import magenta
 
 from magenta.models.shared import events_rnn_model
 from magenta.music.performance_lib import PerformanceEvent
+from magenta.music.constants import COMPOSER_SET
 
 # State for constructing a time-varying control sequence. Keeps track of the
 # current event position and time step in the generated performance, to allow
@@ -281,7 +282,7 @@ default_configs = {
         num_velocity_bins=32,
         control_signals=[
             magenta.music.ComposerHistogramPerformanceControlSignal(
-                composers=composer_master_list)
+                composers=COMPOSER_SET)
         ]),
 
     'signature_conditioned_performance_with_dynamics': PerformanceRnnConfig(
@@ -372,7 +373,7 @@ default_configs = {
         num_velocity_bins=32,
         control_signals=[
           magenta.music.DatasetControlSignal()
-        ])
+        ]),
 
     'multiconditioned_performance_with_dynamics': PerformanceRnnConfig(
         magenta.protobuf.generator_pb2.GeneratorDetails(
