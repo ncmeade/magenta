@@ -72,7 +72,7 @@ i=0
 echo "Creating notesequences . . ."
 while (( $i < $PROCESSES )); do
 	# Note: this runs in the background
-	./dataset_creation_scripts/midi_to_tfrecord.sh $TEMP_DIR_IN/inputs${i} $TEMP_DIR_OUT_NS/notesequences${i}.tfrecord ${i} ${CONFIG}&
+	./dataset_creation_scripts/midi_to_tfrecord.sh $TEMP_DIR_IN/inputs${i} $TEMP_DIR_OUT_NS/notesequences${i}.tfrecord ${CONFIG}&
 
 	(( i++ ))
 done
@@ -96,7 +96,7 @@ wait
 echo "Concatenating sequenceexamples . . ."
 
 # Copy the first training and eval tf records to destination dir
-cp -r $TEMP_DIR_OUT_EX/sequenceexamples0/* $OUTPUT_DIRECTORY/sequenceexamples
+cp $TEMP_DIR_OUT_EX/sequenceexamples0/* $OUTPUT_DIRECTORY/sequenceexamples
 
 i=1
 
