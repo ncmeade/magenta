@@ -85,7 +85,7 @@ i=0
 echo "Creating sequenceexamples . . ."
 while (( $i < $PROCESSES )); do
 	# Note: this runs in the background
-	./dataset_creation_scripts/tfrecord_to_examples.sh $TEMP_DIR_OUT_NS/notesequences${i}.tfrecord $TEMP_DIR_OUT_EX/sequenceexamples${i} ${i} ${CONFIG}&
+	./dataset_creation_scripts/tfrecord_to_examples.sh $TEMP_DIR_OUT_NS/notesequences${i}.tfrecord $TEMP_DIR_OUT_EX/sequenceexamples${i} ${CONFIG}&
 
 	(( i++ ))
 done
