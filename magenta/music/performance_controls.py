@@ -35,6 +35,14 @@ DEFAULT_DATASET_SIGNAL = [0.0, 0.0]
 COMPOSERS = constants.COMPOSER_SET
 DEFAULT_COMPOSER_HISTOGRAM = [0.0] * len (COMPOSERS)
 
+# Composer clusters
+COMPOSER_CLUSTER_1 = constants.COMPOSER_CLUSTER_1
+COMPOSER_CLUSTER_2 = constants.COMPOSER_CLUSTER_2
+COMPOSER_CLUSTER_3 = constants.COMPOSER_CLUSTER_3
+COMPOSER_CLUSTER_5 = constants.COMPOSER_CLUSTER_4
+COMPOSER_CLUSTER_6 = constants.COMPOSER_CLUSTER_5
+COMPOSER_CLUSTER_7 = constants.COMPOSER_CLUSTER_6
+COMPOSER_CLUSTER_8 = constants.COMPOSER_CLUSTER_7
 
 class PerformanceControlSignal(object):
   """Control signal used for conditional generation of performances.

@@ -89,4 +89,24 @@ NOTE_KEYS = [
     [0, 2, 4, 6, 7, 9, 11]
 ]
 
+# For control signals:
+
+# Complete set of composers in Yamaha2750
 COMPOSER_SET = ['Agosti', 'Albeniz', 'Babajanian', 'Bach', 'Balakirev', 'Barber', 'Bartholdy', 'Bartok', 'Beethoven', 'Berg', 'Berio', 'Bizet', 'Bowen', 'Brahms', 'Busoni', 'Carter', 'Chopin', 'Clementi', 'Corigliano', 'Coulthard', 'Crumb', 'Cziffra', 'Danielpour', 'Debussy', 'Dutilleux', 'Enescu', 'Eotvos', 'Falla', 'Franck', 'Gao', 'Gershwin', 'Gibbons', 'Ginastera', 'Glinka', 'Godowsky', 'Gounod', 'Grainger', 'Granados', 'Grieg', 'Grunfeld', 'Gubaidulina', 'Hamelin', 'Handel', 'Haydn', 'Hess', 'Hindemith', 'Hirtz', 'Horowitz', 'Jalbert', 'Janacek', 'Kapustin', 'Kreisler', 'Kurtag', 'Kuzmenko', 'Leschetizky', 'Liebermann', 'Ligeti', 'Liszt', 'Louie', 'Lutoslawski', 'Martin', 'McIntyre', 'Medtner', 'Mendelssohn', 'Menotti', 'Messiaen', 'Morel', 'Moszkowski', 'Mozart', 'Mozetich', 'Muczynski', 'Mussorgsky', 'Myaskovsky', 'Nancarrow', 'Pachelbel', 'Paganini', 'Petri', 'Pletnev', 'Poulenc', 'Prokofiev', 'Purcell', 'Rachmaninoff', 'Rameau', 'Ravel', 'Rimsky-Korsakov', 'Rodrigo', 'Rzewski', 'Saint-Saens', 'Scarlatti', 'Schedrin', 'Schnittke', 'Schonberg', 'Schostakovich', 'Schubert', 'Schumann', 'Scriabin', 'Sheng', 'Shostakovich', 'Slonimsky', 'Soler', 'Strauss', 'Stravinsky', 'Szymanowski', 'Takemitsu', 'Taneyev', 'Tchaikovsky', 'Tchaikowsky', 'Verdi', 'Vine', 'Volodos', 'Wagner', 'Weber', 'Yang', 'Zaimont']
+
+# Composer clusters
+COMPOSER_CLUSTER_1 = ['Chopin', 'Liszt', 'Schubert', 'Schumann', 'Brahms', 'Tchaikovsky', 'Mendelssohn', 'Paganini', 'Busoni', 'Moszkowski', 'Bizet', 'Horowitz']
+
+COMPOSER_CLUSTER_2 = ['Beethoven']
+
+COMPOSER_CLUSTER_3 = ['Bach', 'Handel']
+
+COMPOSER_CLUSTER_4 = ['Prokofiev', 'Stravinsky', 'Bartok', 'Barber', 'Shostakovich']
+
+COMPOSER_CLUSTER_5 = ['Ravel', 'Debussy']
+
+COMPOSER_CLUSTER_6 = ['Haydn', 'Mozart', 'Scarlatti', 'Clementi']
+
+COMPOSER_CLUSTER_7 = ['Rachmaninoff']
+
+COMPOSER_CLUSTER_8 = ['Kapustin', 'Gershwin']
