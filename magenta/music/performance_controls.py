@@ -34,15 +34,10 @@ DEFAULT_TIMEPLACE_VECTOR = [0.0, 0.0, 0.0]
 DEFAULT_DATASET_SIGNAL = [0.0, 0.0]
 COMPOSERS = constants.COMPOSER_SET
 DEFAULT_COMPOSER_HISTOGRAM = [0.0] * len (COMPOSERS)
+DEFAULT_COMPOSER_CLUSTER = [0.0] * NUM_COMPOSER_CLUSTERS
 
-# Composer clusters
-COMPOSER_CLUSTER_1 = constants.COMPOSER_CLUSTER_1
-COMPOSER_CLUSTER_2 = constants.COMPOSER_CLUSTER_2
-COMPOSER_CLUSTER_3 = constants.COMPOSER_CLUSTER_3
-COMPOSER_CLUSTER_5 = constants.COMPOSER_CLUSTER_4
-COMPOSER_CLUSTER_6 = constants.COMPOSER_CLUSTER_5
-COMPOSER_CLUSTER_7 = constants.COMPOSER_CLUSTER_6
-COMPOSER_CLUSTER_8 = constants.COMPOSER_CLUSTER_7
+# Composer cluster
+COMPOSER_CLUSTERS = constants.COMPOSER_CLUSTERS
 
 class PerformanceControlSignal(object):
   """Control signal used for conditional generation of performances.
@@ -292,6 +287,94 @@ class ComposerHistogramPerformanceControlSignal(PerformanceControlSignal):
     @property
     def input_size(self):
       return len(DEFAULT_COMPOSER_HISTOGRAM)
+
+    @property
+    def num_classes(self):
+      raise NotImplementedError
+
+    @property
+    def default_event_label(self):
+      raise NotImplementedError
+
+    def events_to_input(self, events, position):
+      return events[position]
+
+    def events_to_label(self, events, position):
+      raise NotImplementedError
+
+    def class_index_to_event(self, class_index, events):
+      raise NotImplementedError
+
+class ComposerClusterPerformanceControlSignal(PerformanceControlSignal):
+  """Composer cluster histogram performance control signal."""
+
+  name = 'composer_cluster'
+  description = "Desired weight for each for each composer cluster"
+
+  def __init__(self, composers):
+    """Initializes a ComposerClusterPerformanceControlSignal.
+
+    Args:
+      composers: List of all possible composers for this model
+    """
+    self._composers = composers
+    self._encoder = self.ComposerClusterEncoder()
+
+  @property
+  def default_value(self):
+    return DEFAULT_COMPOSER_CLUSTER
+
+  def validate(self, value):
+    return (isinstance(value, list) and len(value) == len(COMPOSER_CLUSTERS) and
+            all(isinstance(val, numbers.Number) for val in value))
+
+  @property
+  def encoder(self):
+    return self._encoder
+
+  def extract(self, performance):
+    """Creates composer cluster histogram at every event in a performance.
+
+    Args:
+      performance: A Performance object for which to create a composer cluster
+          histogram sequence.
+
+    Returns:
+      A list of composer cluster histograms the same length as `performance`, 
+      where each composer cluster histogram is the length of the COMPOSER_CLUSTERS 
+      of float values. The values sum to one.
+    """
+    # get list of composers for the given performance
+    #TODO(NicholasBarreyre): see if there is a function for this
+    composer_list_str = ''
+    for char in performance.composers:
+      composer_list_str += char
+    
+    # parse string representation of list as a list
+    composer_list = ast.literal_eval(composer_list_str)
+
+    # weight each of the composers equally in the histogram
+    weight = 1.0 / len(composer_list) 
+    default_weight = 0.0
+
+    histogram = []
+    
+    for cluster in COMPOSER_CLUSTERS:
+      for composer in composer_list:
+        if composer in cluster:
+          histogram.append(weight)
+        else:
+          histogram.append(default_weight)
+
+    histogram_sequence = [histogram] * len(performance)
+    return histogram_sequence
+
+  class ComposerClusterEncoder(encoder_decoder.EventSequenceEncoderDecoder):
+    """An encoder for composer class histogram sequences."""
+
+    @property
+    def input_size(self):
+      return len(COMPOSER_CLUSTERS)
 
     @property
     def num_classes(self):
@@ -903,6 +986,7 @@ all_performance_control_signals = [
     NoteDensityPerformanceControlSignal,
     PitchHistogramPerformanceControlSignal,
     ComposerHistogramPerformanceControlSignal,
+    ComposerClusterPerformanceControlSignal,
     SignatureHistogramPerformanceControlSignal,
     TimePlacePerformanceControlSignal,
     GlobalPositionPerformanceControlSignal,

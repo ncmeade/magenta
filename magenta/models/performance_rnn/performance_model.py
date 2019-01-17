@@ -24,6 +24,7 @@ import magenta
 from magenta.models.shared import events_rnn_model
 from magenta.music.performance_lib import PerformanceEvent
 from magenta.music.constants import COMPOSER_SET
+from magenta.music.constants import COMPOSER_CLUSTERS
 
 # State for constructing a time-varying control sequence. Keeps track of the
 # current event position and time step in the generated performance, to allow
@@ -285,6 +286,25 @@ default_configs = {
                 composers=COMPOSER_SET)
         ]),
 
+    'composer_cluster_conditioned_performance_with_dynamics': PerformanceRnnConfig(
+        magenta.protobuf.generator_pb2.GeneratorDetails(
+            id='composer_cluster_conditioned_performance_with_dynamics',
+            description='Composer-cluster-conditioned Performance RNN'),
+        magenta.music.OneHotEventSequenceEncoderDecoder(
+            magenta.music.PerformanceOneHotEncoding(
+                num_velocity_bins=32)),
+        tf.contrib.training.HParams(
+            batch_size=64,
+            rnn_layer_sizes=[512, 512, 512],
+            dropout_keep_prob=1.0,
+            clip_norm=3,
+            learning_rate=0.001),
+        num_velocity_bins=32,
+        control_signals=[
+            magenta.music.ComposerClusterPerformanceControlSignal(
+                composers=COMPOSER_CLUSTERS)
+        ]),
+        
     'signature_conditioned_performance_with_dynamics': PerformanceRnnConfig(
         magenta.protobuf.generator_pb2.GeneratorDetails(
             id='signature_conditioned_performance_with_dynamics',

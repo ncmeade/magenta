@@ -96,17 +96,13 @@ COMPOSER_SET = ['Agosti', 'Albeniz', 'Babajanian', 'Bach', 'Balakirev', 'Barber'
 
 # Composer clusters
 COMPOSER_CLUSTER_1 = ['Chopin', 'Liszt', 'Schubert', 'Schumann', 'Brahms', 'Tchaikovsky', 'Mendelssohn', 'Paganini', 'Busoni', 'Moszkowski', 'Bizet', 'Horowitz']
-
 COMPOSER_CLUSTER_2 = ['Beethoven']
-
 COMPOSER_CLUSTER_3 = ['Bach', 'Handel']
-
 COMPOSER_CLUSTER_4 = ['Prokofiev', 'Stravinsky', 'Bartok', 'Barber', 'Shostakovich']
-
 COMPOSER_CLUSTER_5 = ['Ravel', 'Debussy']
-
 COMPOSER_CLUSTER_6 = ['Haydn', 'Mozart', 'Scarlatti', 'Clementi']
-
 COMPOSER_CLUSTER_7 = ['Rachmaninoff']
-
 COMPOSER_CLUSTER_8 = ['Kapustin', 'Gershwin']
+
+# Create a list of composer clusters
+COMPOSER_CLUSTERS = [COMPOSER_CLUSTER_1, COMPOSER_CLUSTER_2, COMPOSER_CLUSTER_3, COMPOSER_CLUSTER_4, COMPOSER_CLUSTER_5, COMPOSER_CLUSTER_6, COMPOSER_CLUSTER_6, COMPOSER_CLUSTER_8, COMPOSER_SET]
