@@ -34,10 +34,9 @@ DEFAULT_TIMEPLACE_VECTOR = [0.0, 0.0, 0.0]
 DEFAULT_DATASET_SIGNAL = [0.0, 0.0]
 COMPOSERS = constants.COMPOSER_SET
 DEFAULT_COMPOSER_HISTOGRAM = [0.0] * len (COMPOSERS)
-DEFAULT_COMPOSER_CLUSTER = [0.0] * NUM_COMPOSER_CLUSTERS
-
-# Composer cluster
 COMPOSER_CLUSTERS = constants.COMPOSER_CLUSTERS
+DEFAULT_COMPOSER_CLUSTER = [0.0] * len(COMPOSER_CLUSTERS)
+
 
 class PerformanceControlSignal(object):
   """Control signal used for conditional generation of performances.
