@@ -99,6 +99,7 @@ from magenta.music.performance_controls import TimePlacePerformanceControlSignal
 from magenta.music.performance_controls import GlobalPositionPerformanceControlSignal
 from magenta.music.performance_controls import TempoControlSignal
 from magenta.music.performance_controls import DatasetControlSignal
+from magenta.music.performance_controls import VelocityPerformanceControlSignal
 
 from magenta.music.performance_encoder_decoder import ModuloPerformanceEventSequenceEncoderDecoder
 from magenta.music.performance_encoder_decoder import PerformanceModuloEncoding
