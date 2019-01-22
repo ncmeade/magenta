@@ -945,19 +945,19 @@ class VelocityPerformanceControlSignal(PerformanceControlSignal):
 
       # Step over window and build histogram over velocity events.
       while step_offset < window_size_steps and j < len(performance):
+
         if (performance[j].event_type == PerformanceEvent.TIME_SHIFT and
             prev_velocity is not None):
           step_offset += performance[j].event_value
           
           # Bin the TIME_SHIFT.
           # TODO(ncmeade): Extract to function.
-          if performance[j].event_value < 15:
+          if prev_velocity < 15:
             histogram[0] += 1
-          elif (performance[j].event_value >= 15 and 
-                performance[j].event_value <= 19):
+          elif prev_velocity >= 15 and prev_velocity <= 19:
             histogram[1] += 1
           else:
-            histogram[2] += 2
+            histogram[2] += 1
 
         elif performance[j].event_type == PerformanceEvent.VELOCITY:
           prev_velocity = performance[j].event_value
@@ -970,7 +970,7 @@ class VelocityPerformanceControlSignal(PerformanceControlSignal):
 
       if actual_window_size_steps > 0:
         count = sum(histogram)
-        histogram = [v / count for v in histogram]
+        histogram = [val / count for val in histogram]
       else:
         histogram = [0, 0, 0]
 
