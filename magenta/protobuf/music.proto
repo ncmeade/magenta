@@ -435,4 +435,7 @@ message SequenceMetadata {
 
   // If the piece has an accompanying tempo conditioning signal
   int32 tempo_flag = 10;
+
+  // If the piece has an accompanying tempo conditioning signal
+  string key_signature = 11;
 }

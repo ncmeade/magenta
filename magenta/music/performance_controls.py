@@ -34,7 +34,7 @@ DEFAULT_TIMEPLACE_VECTOR = [0.0, 0.0, 0.0]
 DEFAULT_DATASET_SIGNAL = [0.0, 0.0]
 COMPOSERS = constants.COMPOSER_SET
 DEFAULT_COMPOSER_HISTOGRAM = [0.0] * len (COMPOSERS)
-
+MAJOR_MINOR_VECTOR = ['major', 'minor', None]
 
 class PerformanceControlSignal(object):
   """Control signal used for conditional generation of performances.
@@ -212,6 +212,78 @@ class NoteDensityPerformanceControlSignal(PerformanceControlSignal):
         return 0.0
       else:
         return self._density_bin_ranges[index - 1]
+
+class MajorMinorPerformanceControlSignal(PerformanceControlSignal):
+  """Major or minor performance control signal."""
+
+  name = 'major_or_minor'
+  description = 'Desired key: major or minor'
+
+  def __init__(self, vector=MAJOR_MINOR_VECTOR):
+    """Initialize a MajorMinorPerformanceControlSignal.
+
+    Args: 
+      vector - list of possible values
+    """
+    self.vector = vector
+    self._encoder = encoder_decoder.OneHotEventSequenceEncoderDecoder(
+        self.MajorMinorOneHotEncoding(vector))
+
+  def validate(self, value):
+    return value in self.vector
+
+  @property
+  def default_value(self):
+    return None
+
+  @property
+  def encoder(self):
+    return self._encoder
+
+  def extract(self, performance):
+    """Extracts whether performance is major/minor and applies this at every event.
+
+    Args:
+      performance: A Performance object for which to annotate.
+
+    Returns:
+      A list with elements 'major', 'minor' or None depending on whether or not the 
+      performance is major, minor, or the key is unknown respectively.
+    """  
+
+    if 'major' in performance.key_signature:
+      return ['major'] * len(performance)
+    elif 'minor' in performance.key_signature:
+      return ['minor'] * len(performance)
+    else:
+      return [None] * len(performance)
+
+  class MajorMinorOneHotEncoding(encoder_decoder.OneHotEncoding):
+    """One-hot encoding of major or minor key in a performance."""
+
+    def __init__(self, vector=MAJOR_MINOR_VECTOR):
+      """Initialize a NoteDensityOneHotEncoding.
+
+      Args:
+        density_bin_ranges: List of note density (notes per second) bin
+            boundaries to use when quantizing. The number of bins will be one
+            larger than the list length.
+      """
+      self._vector = vector
+
+    @property
+    def num_classes(self):
+      return len(self._vector)
+
+    @property
+    def default_event(self):
+      return self._vector.indexof(None)
+
+    def encode_event(self, event):
+      return self._vector.indexof(event)
+
+    def decode_event(self, index):
+      return self._vector[index]
 
 
 class ComposerHistogramPerformanceControlSignal(PerformanceControlSignal):
@@ -899,5 +971,6 @@ all_performance_control_signals = [
     TimePlacePerformanceControlSignal,
     GlobalPositionPerformanceControlSignal,
     TempoControlSignal,
-    DatasetControlSignal
+    DatasetControlSignal,
+    MajorMinorPerformanceControlSignal
 ]
