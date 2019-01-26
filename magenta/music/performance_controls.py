@@ -912,7 +912,9 @@ class VelocityPerformanceControlSignal(PerformanceControlSignal):
     self._encoder = self.VelocityHistogramEncoder()
 
   def validate(self, value):
-    return isinstance(value, numbers.Number) and value >= 0.0
+    return (isinstance(value, list) and 
+            len(value) == len(DEFAULT_VELOCITY_HISTOGRAM) and
+            all(isinstance(val, numbers.Number) for val in value))
 
   @property
   def default_value(self):
