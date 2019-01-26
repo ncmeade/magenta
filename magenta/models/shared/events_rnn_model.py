@@ -329,6 +329,8 @@ class EventSequenceRnnModel(mm.BaseModel):
       inputs = self._config.encoder_decoder.get_inputs_batch(
           event_sequences, full_length=True)
 
+    generation_state = mm.GenerationState()
+    modify_events_callback = generation_state.callback
     if modify_events_callback:
       # Modify event sequences and inputs for first step after primer.
       modify_events_callback(
