@@ -588,6 +588,7 @@ class Performance(BasePerformance):
       # We use tempos and metadata for creating conditioning signals.
       self.tempos = quantized_sequence.tempos
       self.metadata = quantized_sequence.sequence_metadata
+      self.subsequence_info = quantized_sequence.subsequence_info
 
     else:
       self._steps_per_second = steps_per_second
@@ -694,6 +695,7 @@ class MetricPerformance(BasePerformance):
       # We use tempos and metadata for creating conditioning signals.
       self.tempos = quantized_sequence.tempos
       self.metadata = quantized_sequence.sequence_metadata
+      self.subsequence_info = quantized_sequence.subsequence_info
 
     else:
       self._steps_per_quarter = steps_per_quarter

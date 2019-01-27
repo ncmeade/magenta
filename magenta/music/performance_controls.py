@@ -413,88 +413,6 @@ class SignatureHistogramPerformanceControlSignal(PerformanceControlSignal):
       raise NotImplementedError
 
 
-class GlobalPositionPerformanceControlSignal(PerformanceControlSignal):
-  """Global position performance control signal."""
-
-  name = 'global_position'
-  description = 'Desired position vector for performance'
-
-  def __init__(self):
-    """Initialize a GlobalPositionPerformanceControlSignal.
-
-    Format: [time from start, time till end]
-
-    Args:
-    """
-    self._encoder = self.GlobalPositionEncoderDecoder()
-
-  def validate(self, value):
-    return isinstance(value, list) and all(isinstance(item, numbers.Number) 
-          for item in value)
-
-  @property
-  def default_value(self):
-    return [0.0, 0.0] # TODO: check this
-
-  @property
-  def encoder(self):
-    return self._encoder
-
-  def extract(self, performance):
-    """Computes global position at every event in a performance.
-
-    Args:
-      performance: A Performance object for which to compute a global
-          position at each event.
-
-    Returns:
-      A list of vectors of the same length as `performance`, with each
-      entry equal to the note density in the window starting at the
-      corresponding performance event time.
-    """
-    delta_time = performance.start_step
-    position_sequence = []
-
-    for event in performance:
-      if (event.event_type == PerformanceEvent.TIME_SHIFT):
-        # The previous event didn't move us forward in time, so the position
-        # here should be the same.
-        delta_time += event.event_value
-
-      position_sequence.append(delta_time)
-
-    total_time = delta_time
-
-    # Include time till end
-    position_sequence = [[t, total_time - t] for t in position_sequence]
-
-    return position_sequence 
-
-  class GlobalPositionEncoderDecoder(encoder_decoder.EventSequenceEncoderDecoder):
-    """An encoder for global position sequences."""
-
-    @property
-    def input_size(self):
-      return 2 # time since start, time till end
-
-    @property
-    def num_classes(self):
-      raise NotImplementedError
-
-    @property
-    def default_event_label(self):
-      raise NotImplementedError
-
-    def events_to_input(self, events, position):
-      return events[position]
-
-    def events_to_label(self, events, position):
-      raise NotImplementedError
-
-    def class_index_to_event(self, class_index, events):
-      raise NotImplementedError
-
-
 class TimePlacePerformanceControlSignal(PerformanceControlSignal):
   """Year of birth (yob), latitude (lat) and longitude (lon) vector 
   performance control signal. Values are normalized."""
@@ -1010,6 +928,83 @@ class VelocityPerformanceControlSignal(PerformanceControlSignal):
 
     def class_index_to_event(self, class_index, events):
       raise NotImplementedError
+
+
+class RelativePositionControlSignal(PerformanceControlSignal):
+  """Relative position performance control signal."""
+
+  name = 'relative_position'
+  description = 'Relative position in performance.'
+
+  def __init__(self):
+    """Initializes a RelativePositionControlSignal."""
+    self._encoder = self.RelativePositionEncoderDecoder()
+
+  def validate(self, value):
+    return (isinstance(value, list) and
+            all(isinstance(v, numbers.Number) for v in value))
+
+  @property
+  def default_value(self):
+    return [0.0]
+  
+  @property
+  def encoder(self):
+    return self._encoder
+
+  def extract(self, performance):
+    """Computes the local relative position signal at each event in a
+    performance.
+
+    Params:
+      performance: A Performance object for which to compute the relative
+        position at each event.
+
+    Returns:
+      List of control signals for each event in a performance.
+    """
+    # Time offset in seconds.
+    time_offset = 0
+    position_sequence = []
+
+    from magenta.music import midi_io
+    for event in performance:
+      if event.event_type == PerformanceEvent.TIME_SHIFT:
+        # Convert to seconds.
+        time_offset += event.event_value / 100
+
+      position = ((performance.subsequence_info.start_time_offset + 
+                  time_offset) / 
+                  performance.subsequence_info.source_total_time)
+
+      position_sequence.append([position])
+
+    return position_sequence
+
+  class RelativePositionEncoderDecoder(
+    encoder_decoder.EventSequenceEncoderDecoder):
+    """An encoder for the relative position control signal."""
+
+    @property
+    def input_size(self):
+      return 1
+
+    @property
+    def num_classes(self):
+      raise NotImplementedError
+
+    @property
+    def default_event_label(self):
+      raise NotImplementedError
+
+    def events_to_input(self, events, position):
+      return events[position]
+
+    def events_to_label(self, events, position):
+      raise NotImplementedError
+
+    def class_index_to_event(self, class_index, events):
+      raise NotImplementedError
   
 
 # List of performance control signal classes.
@@ -1019,8 +1014,8 @@ all_performance_control_signals = [
     ComposerHistogramPerformanceControlSignal,
     SignatureHistogramPerformanceControlSignal,
     TimePlacePerformanceControlSignal,
-    GlobalPositionPerformanceControlSignal,
     TempoControlSignal,
     DatasetControlSignal,
-    VelocityPerformanceControlSignal
+    VelocityPerformanceControlSignal,
+    RelativePositionControlSignal
 ]
