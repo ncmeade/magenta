@@ -284,10 +284,10 @@ class MajorMinorPerformanceControlSignal(PerformanceControlSignal):
 
     @property
     def default_event(self):
-      return self._vector.indexof(None)
+      return self._vector.index(None)
 
     def encode_event(self, event):
-      return self._vector.indexof(event)
+      return self._vector.index(event)
 
     def decode_event(self, index):
       return self._vector[index]
