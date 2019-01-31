@@ -253,9 +253,14 @@ class MajorMinorPerformanceControlSignal(PerformanceControlSignal):
       performance is major, minor, or the key is unknown respectively.
     """  
 
-    if 'major' in performance.key_signature:
+    # TODO: fix this hack
+    key_sig = ''
+    for c in performance.key_signature:
+      key_sig += c
+
+    if 'major' in key_sig:
       return ['major'] * len(performance)
-    elif 'minor' in performance.key_signature:
+    elif 'minor' in key_sig:
       return ['minor'] * len(performance)
     else:
       return [None] * len(performance)
