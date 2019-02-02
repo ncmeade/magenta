@@ -35,6 +35,8 @@ DEFAULT_DATASET_SIGNAL = [0.0, 0.0]
 COMPOSERS = constants.COMPOSER_SET
 DEFAULT_COMPOSER_HISTOGRAM = [0.0] * len (COMPOSERS)
 DEFAULT_VELOCITY_HISTOGRAM = [0.0, 0.0, 0.0]
+COMPOSER_CLUSTERS = constants.COMPOSER_CLUSTERS
+DEFAULT_COMPOSER_CLUSTER = [0.0] * len(COMPOSER_CLUSTERS)
 MAJOR_MINOR_VECTOR = ['major', 'minor', None]
 
 class PerformanceControlSignal(object):
@@ -252,9 +254,14 @@ class MajorMinorPerformanceControlSignal(PerformanceControlSignal):
       performance is major, minor, or the key is unknown respectively.
     """  
 
-    if 'major' in performance.key_signature:
+    # TODO: fix this hack
+    key_sig = ''
+    for c in performance.key_signature:
+      key_sig += c
+
+    if 'major' in key_sig:
       return ['major'] * len(performance)
-    elif 'minor' in performance.key_signature:
+    elif 'minor' in key_sig:
       return ['minor'] * len(performance)
     else:
       return [None] * len(performance)
@@ -278,10 +285,10 @@ class MajorMinorPerformanceControlSignal(PerformanceControlSignal):
 
     @property
     def default_event(self):
-      return self._vector.indexof(None)
+      return self._vector.index(None)
 
     def encode_event(self, event):
-      return self._vector.indexof(event)
+      return self._vector.index(event)
 
     def decode_event(self, index):
       return self._vector[index]
@@ -357,6 +364,93 @@ class ComposerHistogramPerformanceControlSignal(PerformanceControlSignal):
     @property
     def input_size(self):
       return len(DEFAULT_COMPOSER_HISTOGRAM)
+
+    @property
+    def num_classes(self):
+      raise NotImplementedError
+
+    @property
+    def default_event_label(self):
+      raise NotImplementedError
+
+    def events_to_input(self, events, position):
+      return events[position]
+
+    def events_to_label(self, events, position):
+      raise NotImplementedError
+
+    def class_index_to_event(self, class_index, events):
+      raise NotImplementedError
+
+class ComposerClusterPerformanceControlSignal(PerformanceControlSignal):
+  """Composer cluster histogram performance control signal."""
+
+  name = 'composer_cluster'
+  description = "Desired weight for each for each composer cluster"
+
+  def __init__(self, composers):
+    """Initializes a ComposerClusterPerformanceControlSignal.
+
+    Args:
+      composers: List of all possible composers for this model
+    """
+    self._composers = composers
+    self._encoder = self.ComposerClusterEncoder()
+
+  @property
+  def default_value(self):
+    return DEFAULT_COMPOSER_CLUSTER
+
+  def validate(self, value):
+    return (isinstance(value, list) and len(value) == len(COMPOSER_CLUSTERS) and
+            all(isinstance(val, numbers.Number) for val in value))
+
+  @property
+  def encoder(self):
+    return self._encoder
+
+  def extract(self, performance):
+    """Creates composer cluster histogram at every event in a performance.
+
+    Args:
+      performance: A Performance object for which to create a composer cluster
+          histogram sequence.
+
+    Returns:
+      A list of composer cluster histograms the same length as `performance`, 
+      where each composer cluster histogram is the length of the COMPOSER_CLUSTERS 
+      of float values. The values sum to one.
+    """
+    # get list of composers for the given performance
+    #TODO(NicholasBarreyre): see if there is a function for this
+    composer_list_str = ''
+    for char in performance.composers:
+      composer_list_str += char
+    
+    # parse string representation of list as a list
+    composer_list = ast.literal_eval(composer_list_str)
+
+    # weight each of the composers equally in the histogram
+    weight = 1.0 / len(composer_list) 
+    default_weight = 0.0
+
+    histogram = [default_weight] * len(COMPOSER_CLUSTERS)
+
+    for composer in composer_list:
+      for i, cluster in enumerate(COMPOSER_CLUSTERS):
+        if composer in cluster:
+          histogram[i] += weight
+          break
+
+    histogram_sequence = [histogram] * len(performance)
+    return histogram_sequence
+
+  class ComposerClusterEncoder(encoder_decoder.EventSequenceEncoderDecoder):
+    """An encoder for composer class histogram sequences."""
+
+    @property
+    def input_size(self):
+      return len(COMPOSER_CLUSTERS)
 
     @property
     def num_classes(self):
@@ -1084,6 +1178,7 @@ all_performance_control_signals = [
     NoteDensityPerformanceControlSignal,
     PitchHistogramPerformanceControlSignal,
     ComposerHistogramPerformanceControlSignal,
+    ComposerClusterPerformanceControlSignal,
     SignatureHistogramPerformanceControlSignal,
     TimePlacePerformanceControlSignal,
     TempoControlSignal,
