@@ -34,6 +34,7 @@ DEFAULT_TIMEPLACE_VECTOR = [0.0, 0.0, 0.0]
 DEFAULT_DATASET_SIGNAL = [0.0, 0.0]
 COMPOSERS = constants.COMPOSER_SET
 DEFAULT_COMPOSER_HISTOGRAM = [0.0] * len (COMPOSERS)
+DEFAULT_VELOCITY_HISTOGRAM = [0.0, 0.0, 0.0]
 COMPOSER_CLUSTERS = constants.COMPOSER_CLUSTERS
 DEFAULT_COMPOSER_CLUSTER = [0.0] * len(COMPOSER_CLUSTERS)
 MAJOR_MINOR_VECTOR = ['major', 'minor', None]
@@ -578,88 +579,6 @@ class SignatureHistogramPerformanceControlSignal(PerformanceControlSignal):
       raise NotImplementedError
 
 
-class GlobalPositionPerformanceControlSignal(PerformanceControlSignal):
-  """Global position performance control signal."""
-
-  name = 'global_position'
-  description = 'Desired position vector for performance'
-
-  def __init__(self):
-    """Initialize a GlobalPositionPerformanceControlSignal.
-
-    Format: [time from start, time till end]
-
-    Args:
-    """
-    self._encoder = self.GlobalPositionEncoderDecoder()
-
-  def validate(self, value):
-    return isinstance(value, list) and all(isinstance(item, numbers.Number) 
-          for item in value)
-
-  @property
-  def default_value(self):
-    return [0.0, 0.0] # TODO: check this
-
-  @property
-  def encoder(self):
-    return self._encoder
-
-  def extract(self, performance):
-    """Computes global position at every event in a performance.
-
-    Args:
-      performance: A Performance object for which to compute a global
-          position at each event.
-
-    Returns:
-      A list of vectors of the same length as `performance`, with each
-      entry equal to the note density in the window starting at the
-      corresponding performance event time.
-    """
-    delta_time = performance.start_step
-    position_sequence = []
-
-    for event in performance:
-      if (event.event_type == PerformanceEvent.TIME_SHIFT):
-        # The previous event didn't move us forward in time, so the position
-        # here should be the same.
-        delta_time += event.event_value
-
-      position_sequence.append(delta_time)
-
-    total_time = delta_time
-
-    # Include time till end
-    position_sequence = [[t, total_time - t] for t in position_sequence]
-
-    return position_sequence 
-
-  class GlobalPositionEncoderDecoder(encoder_decoder.EventSequenceEncoderDecoder):
-    """An encoder for global position sequences."""
-
-    @property
-    def input_size(self):
-      return 2 # time since start, time till end
-
-    @property
-    def num_classes(self):
-      raise NotImplementedError
-
-    @property
-    def default_event_label(self):
-      raise NotImplementedError
-
-    def events_to_input(self, events, position):
-      return events[position]
-
-    def events_to_label(self, events, position):
-      raise NotImplementedError
-
-    def class_index_to_event(self, class_index, events):
-      raise NotImplementedError
-
-
 class TimePlacePerformanceControlSignal(PerformanceControlSignal):
   """Year of birth (yob), latitude (lat) and longitude (lon) vector 
   performance control signal. Values are normalized."""
@@ -1056,6 +975,204 @@ class TempoControlSignal(PerformanceControlSignal):
     def class_index_to_event(self, class_index, events):
       raise NotImplementedError
 
+
+class VelocityPerformanceControlSignal(PerformanceControlSignal):
+  """Velocity performance control signal."""
+
+  name = 'velocity_histogram'
+  description = 'Desired weight for each of the 3 velocity classes.'
+
+  def __init__(self, window_size_seconds, velocity_bin_ranges):
+    """Initializes a VelocityPerformanceControlSignal.
+
+    Params:
+      window_size_seconds: The size of the window, in seconds, used to
+        compute the velocity histogram.
+      velocity_bin_ranges: List of velocity bin boundaries used to create
+        the velocity histogram
+    """
+    self._window_size_seconds = window_size_seconds
+    self._velocity_bin_ranges = velocity_bin_ranges
+    self._encoder = self.VelocityHistogramEncoder()
+
+  def validate(self, value):
+    return (isinstance(value, list) and 
+            len(value) == len(DEFAULT_VELOCITY_HISTOGRAM) and
+            all(isinstance(val, numbers.Number) for val in value))
+
+  @property
+  def default_value(self):
+    return DEFAULT_VELOCITY_HISTOGRAM
+
+  @property
+  def encoder(self):
+    return self._encoder
+
+  def extract(self, performance):
+    """Computes the velocity histogram at every event in a performance.
+
+    Params:
+      performance: A Performance object for which to compute the velocity
+        histogram sequence.
+
+    Returns:
+      A list of velocity histograms of the same length as `performance`.
+    """
+    window_size_steps = int(round(
+        self._window_size_seconds * performance.steps_per_second))
+
+    histogram_sequence = []
+    prev_velocity = None
+    
+    for i, event in enumerate(performance):
+      j = i
+      step_offset = 0
+      histogram = [0, 0, 0]
+
+      # Step over window and build histogram over velocity events.
+      while step_offset < window_size_steps and j < len(performance):
+
+        if performance[j].event_type == PerformanceEvent.TIME_SHIFT:
+          step_offset += performance[j].event_value
+
+        elif (performance[j].event_type == PerformanceEvent.NOTE_ON and
+              prev_velocity is not None):
+          # Bin the NOTE_ON.
+          # TODO(ncmeade): Extract to function.
+          if prev_velocity < 15:
+            histogram[0] += 1
+          elif prev_velocity >= 15 and prev_velocity <= 19:
+            histogram[1] += 1
+          else:
+            histogram[2] += 1
+
+        elif performance[j].event_type == PerformanceEvent.VELOCITY:
+          prev_velocity = performance[j].event_value
+        j += 1
+
+      # If we're near the end of the performance, part of the window will
+      # necessarily be empty; we don't include this part of the window when
+      # calculating the histogram.
+      actual_window_size_steps = min(step_offset, window_size_steps)
+
+      if actual_window_size_steps > 0:
+        count = sum(histogram)
+        # Only normalize if NOTE_ONs occurred within the window.
+        if count != 0:
+          histogram = [val / count for val in histogram]
+      else:
+        histogram = [0, 0, 0]
+
+      if performance[i].event_type == PerformanceEvent.VELOCITY:
+        initial_velocity = performance[i].event_value
+
+      histogram_sequence.append(histogram)
+    
+    return histogram_sequence
+       
+
+  class VelocityHistogramEncoder(encoder_decoder.EventSequenceEncoderDecoder):
+    """An encoder for velocity class histogram sequences."""
+    
+    @property
+    def input_size(self):
+      return len(DEFAULT_VELOCITY_HISTOGRAM)
+
+    @property
+    def num_classes(self):
+      raise NotImplementedError
+
+    @property
+    def default_event_label(self):
+      raise NotImplementedError
+
+    def events_to_input(self, events, position):
+      return events[position]
+
+    def events_to_label(self, events, position):
+      raise NotImplementedError
+
+    def class_index_to_event(self, class_index, events):
+      raise NotImplementedError
+
+
+class RelativePositionControlSignal(PerformanceControlSignal):
+  """Relative position performance control signal."""
+
+  name = 'relative_position'
+  description = 'Relative position in performance.'
+
+  def __init__(self):
+    """Initializes a RelativePositionControlSignal."""
+    self._encoder = self.RelativePositionEncoderDecoder()
+
+  def validate(self, value):
+    return (isinstance(value, list) and
+            all(isinstance(v, numbers.Number) for v in value))
+
+  @property
+  def default_value(self):
+    return [0.0]
+  
+  @property
+  def encoder(self):
+    return self._encoder
+
+  def extract(self, performance):
+    """Computes the local relative position signal at each event in a
+    performance.
+
+    Params:
+      performance: A Performance object for which to compute the relative
+        position at each event.
+
+    Returns:
+      List of control signals for each event in a performance.
+    """
+    # Time offset in seconds.
+    time_offset = 0
+    position_sequence = []
+
+    from magenta.music import midi_io
+    for event in performance:
+      if event.event_type == PerformanceEvent.TIME_SHIFT:
+        # Convert to seconds.
+        time_offset += event.event_value / 100
+
+      position = ((performance.subsequence_info.start_time_offset + 
+                  time_offset) / 
+                  performance.subsequence_info.source_total_time)
+
+      position_sequence.append([position])
+
+    return position_sequence
+
+  class RelativePositionEncoderDecoder(
+    encoder_decoder.EventSequenceEncoderDecoder):
+    """An encoder for the relative position control signal."""
+
+    @property
+    def input_size(self):
+      return 1
+
+    @property
+    def num_classes(self):
+      raise NotImplementedError
+
+    @property
+    def default_event_label(self):
+      raise NotImplementedError
+
+    def events_to_input(self, events, position):
+      return events[position]
+
+    def events_to_label(self, events, position):
+      raise NotImplementedError
+
+    def class_index_to_event(self, class_index, events):
+      raise NotImplementedError
+  
+
 # List of performance control signal classes.
 all_performance_control_signals = [
     NoteDensityPerformanceControlSignal,
@@ -1064,8 +1181,9 @@ all_performance_control_signals = [
     ComposerClusterPerformanceControlSignal,
     SignatureHistogramPerformanceControlSignal,
     TimePlacePerformanceControlSignal,
-    GlobalPositionPerformanceControlSignal,
     TempoControlSignal,
     DatasetControlSignal,
+    VelocityPerformanceControlSignal,
+    RelativePositionControlSignal,
     MajorMinorPerformanceControlSignal
 ]

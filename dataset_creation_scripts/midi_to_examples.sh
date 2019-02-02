@@ -57,8 +57,8 @@ do
         continue # Skip json files
 	else
 		NAME=$( basename "$FILE" .mid )
-		ln ${INPUT_DIRECTORY}${NAME}.mid $TEMP_DIR_IN/inputs$(( i % PROCESSES ))
-		ln ${INPUT_DIRECTORY}${NAME}.json $TEMP_DIR_IN/inputs$(( i % PROCESSES ))
+		ln ${INPUT_DIRECTORY}/${NAME}.mid $TEMP_DIR_IN/inputs$(( i % PROCESSES ))
+		ln ${INPUT_DIRECTORY}/${NAME}.json $TEMP_DIR_IN/inputs$(( i % PROCESSES ))
 		(( i++ ))
 	fi
 done
@@ -95,10 +95,7 @@ wait
 # Concatenate all the TF records into one
 echo "Concatenating sequenceexamples . . ."
 
-# Copy the first training and eval tf records to destination dir
-cp $TEMP_DIR_OUT_EX/sequenceexamples0/* $OUTPUT_DIRECTORY/sequenceexamples
-
-i=1
+i=0
 
 while (( $i < $PROCESSES )); do
 

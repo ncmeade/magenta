@@ -13,8 +13,8 @@ CONFIG=$3
 cd ~/magenta
 source activate magenta
 
-nohup ./bazel-bin/magenta/models/performance_rnn/performance_rnn_create_dataset \
+./bazel-bin/magenta/models/performance_rnn/performance_rnn_create_dataset \
 --config=${CONFIG} \
 --input=$NOTESEQUENCES_FILE \
 --output_dir=$OUTPUT_DIRECTORY \
---eval_ratio=0.10 > nohup_sequence_ex.out
+--eval_ratio=0.10
