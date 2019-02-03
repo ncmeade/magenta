@@ -434,7 +434,7 @@ class ComposerClusterPerformanceControlSignal(PerformanceControlSignal):
     weight = 1.0 / len(composer_list) 
     default_weight = 0.0
 
-    histogram = [default_weight] * len(COMPOSER_CLUSTERS + 1)
+    histogram = [default_weight] * (len(COMPOSER_CLUSTERS) + 1)
 
     for composer in composer_list:
       for i, cluster in enumerate(COMPOSER_CLUSTERS):
