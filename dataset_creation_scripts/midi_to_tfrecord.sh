@@ -13,8 +13,8 @@ CONFIG=$3
 cd ~/magenta
 source activate magenta
 
-nohup ./bazel-bin/magenta/scripts/convert_dir_to_note_sequences \
+./bazel-bin/magenta/scripts/convert_dir_to_note_sequences \
   --input_dir=$INPUT_DIRECTORY \
   --output_file=$SEQUENCES_TFRECORD \
   --config=$CONFIG \
-  --recursive > nohup_sequence_ex.out
+  --recursive

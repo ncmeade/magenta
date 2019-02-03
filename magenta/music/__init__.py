@@ -97,9 +97,10 @@ from magenta.music.performance_controls import ComposerHistogramPerformanceContr
 from magenta.music.performance_controls import ComposerClusterPerformanceControlSignal
 from magenta.music.performance_controls import SignatureHistogramPerformanceControlSignal
 from magenta.music.performance_controls import TimePlacePerformanceControlSignal
-from magenta.music.performance_controls import GlobalPositionPerformanceControlSignal
 from magenta.music.performance_controls import TempoControlSignal
 from magenta.music.performance_controls import DatasetControlSignal
+from magenta.music.performance_controls import VelocityPerformanceControlSignal
+from magenta.music.performance_controls import RelativePositionControlSignal
 from magenta.music.performance_controls import MajorMinorPerformanceControlSignal
 
 from magenta.music.performance_encoder_decoder import ModuloPerformanceEventSequenceEncoderDecoder
@@ -135,3 +136,5 @@ from magenta.music.sequences_lib import quantize_to_step
 from magenta.music.sequences_lib import steps_per_bar_in_quantized_sequence
 from magenta.music.sequences_lib import steps_per_quarter_to_steps_per_second
 from magenta.music.sequences_lib import trim_note_sequence
+
+from magenta.music.generation_lib import GenerationState
