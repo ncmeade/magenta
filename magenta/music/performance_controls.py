@@ -36,7 +36,7 @@ COMPOSERS = constants.COMPOSER_SET
 DEFAULT_COMPOSER_HISTOGRAM = [0.0] * len (COMPOSERS)
 DEFAULT_VELOCITY_HISTOGRAM = [0.0, 0.0, 0.0]
 COMPOSER_CLUSTERS = constants.COMPOSER_CLUSTERS
-DEFAULT_COMPOSER_CLUSTER = [0.0] * len(COMPOSER_CLUSTERS + 1)
+DEFAULT_COMPOSER_CLUSTER = [0.0] * (len(COMPOSER_CLUSTERS) + 1)
 MAJOR_MINOR_VECTOR = ['major', 'minor', None]
 
 class PerformanceControlSignal(object):
@@ -402,7 +402,7 @@ class ComposerClusterPerformanceControlSignal(PerformanceControlSignal):
     return DEFAULT_COMPOSER_CLUSTER
 
   def validate(self, value):
-    return (isinstance(value, list) and len(value) == len(COMPOSER_CLUSTERS) and
+    return (isinstance(value, list) and len(value) == (len(COMPOSER_CLUSTERS) + 1) and
             all(isinstance(val, numbers.Number) for val in value))
 
   @property
@@ -452,7 +452,7 @@ class ComposerClusterPerformanceControlSignal(PerformanceControlSignal):
 
     @property
     def input_size(self):
-      return len(COMPOSER_CLUSTERS)
+      return len(COMPOSER_CLUSTERS) + 1
 
     @property
     def num_classes(self):
