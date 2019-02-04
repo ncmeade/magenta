@@ -36,7 +36,7 @@ COMPOSERS = constants.COMPOSER_SET
 DEFAULT_COMPOSER_HISTOGRAM = [0.0] * len (COMPOSERS)
 DEFAULT_VELOCITY_HISTOGRAM = [0.0, 0.0, 0.0]
 COMPOSER_CLUSTERS = constants.COMPOSER_CLUSTERS
-DEFAULT_COMPOSER_CLUSTER = [0.0] * len(COMPOSER_CLUSTERS + 1)
+DEFAULT_COMPOSER_CLUSTER = [0.0] * (len(COMPOSER_CLUSTERS) + 1)
 MAJOR_MINOR_VECTOR = ['major', 'minor', None]
 
 class PerformanceControlSignal(object):
@@ -434,7 +434,7 @@ class ComposerClusterPerformanceControlSignal(PerformanceControlSignal):
     weight = 1.0 / len(composer_list) 
     default_weight = 0.0
 
-    histogram = [default_weight] * len(COMPOSER_CLUSTERS + 1)
+    histogram = [default_weight] * (len(COMPOSER_CLUSTERS) + 1)
 
     for composer in composer_list:
       for i, cluster in enumerate(COMPOSER_CLUSTERS):
