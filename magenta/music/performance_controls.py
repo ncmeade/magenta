@@ -1173,6 +1173,76 @@ class RelativePositionControlSignal(PerformanceControlSignal):
 
     def class_index_to_event(self, class_index, events):
       raise NotImplementedError
+
+class CenturyControlSignal(PerformanceControlSignal):
+  "Year of birth of composer control signal."""
+
+  name = 'century_signal'
+  description = 'Century control signal.'
+
+  def __init__(self):
+    self._encoder = self.CenturyControlSignalEncoder()
+
+  @property
+  def default_value(self):
+    return [0, 0, 0, 0]
+
+  @property
+  def validate(self, value):
+    return (instance(value, list) and
+            len(value) == 4 and
+            all(isinstance(val, numbers.Number) for val in value))
+  
+  @property
+  def encoder(self):
+    return self._encoder
+
+  def extract(self, performance):
+    """Computes the local control signal at each event in a performance.
+
+    Params:
+      performance: A Performance object for which to compute the relative
+        position at each event.
+
+    Returns:
+      List of control signals for each event in a performance.
+    """
+    if performance.yob == "None":
+      signal = [0, 0, 0, 0]
+    elif int(performance.yob) >= 1900:
+      signal = [0, 0, 0, 1]
+    elif int(performance.yob) >= 1800:
+      signal = [0, 0, 1, 0]
+    elif int(performance.yob) >= 1700:
+      signal = [0, 1, 0, 0]
+    elif int(performance.yob) >= 1600:
+      signal = [1, 0, 0, 0]
+
+    return [signal] * len(performance)
+ 
+  class CenturyControlSignalEncoder(encoder_decoder.EventSequenceEncoderDecoder):
+    """An encoder for the century control signal."""
+    
+    @property
+    def input_size(self):
+      return 4
+
+    @property
+    def num_classes(self):
+      raise NotImplementedError
+    
+    @property
+    def default_event_label(self):
+      raise NotImplementedError
+
+    def events_to_input(self, events, position):
+      return events[position]
+
+    def events_to_label(self, events, position):
+      raise NotImplementedError
+
+    def class_index_to_event(self, class_index, events):
+      raise NotImplementedError
   
 
 # List of performance control signal classes.
@@ -1187,5 +1257,6 @@ all_performance_control_signals = [
     DatasetControlSignal,
     VelocityPerformanceControlSignal,
     RelativePositionControlSignal,
-    MajorMinorPerformanceControlSignal
+    MajorMinorPerformanceControlSignal,
+    CenturyControlSignal
 ]
