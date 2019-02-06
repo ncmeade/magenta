@@ -452,7 +452,7 @@ class ComposerClusterPerformanceControlSignal(PerformanceControlSignal):
 
     @property
     def input_size(self):
-      return len(COMPOSER_CLUSTERS)
+      return len(DEFAULT_COMPOSER_CLUSTER)
 
     @property
     def num_classes(self):
@@ -1209,13 +1209,13 @@ class CenturyControlSignal(PerformanceControlSignal):
     """
     if performance.yob == "None":
       signal = [0, 0, 0, 0]
-    elif int(performance.yob) >= 1900:
+    elif int(float(performance.yob)) >= 1900:
       signal = [0, 0, 0, 1]
-    elif int(performance.yob) >= 1800:
+    elif int(float(performance.yob)) >= 1800:
       signal = [0, 0, 1, 0]
-    elif int(performance.yob) >= 1700:
+    elif int(float(performance.yob)) >= 1700:
       signal = [0, 1, 0, 0]
-    elif int(performance.yob) >= 1600:
+    elif int(float(performance.yob)) >= 1600:
       signal = [1, 0, 0, 0]
 
     return [signal] * len(performance)
