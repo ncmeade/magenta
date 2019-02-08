@@ -1166,7 +1166,6 @@ class RelativePositionControlSignal(PerformanceControlSignal):
     time_offset = 0
     position_sequence = []
 
-    from magenta.music import midi_io
     for event in performance:
       if event.event_type == PerformanceEvent.TIME_SHIFT:
         # Convert to seconds.
