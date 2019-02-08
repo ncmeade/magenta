@@ -22,7 +22,14 @@ import copy
 import heapq
 
 import numpy as np
-from scipy.special import softmax
+try:
+    from scipy.special import softmax
+except Exception as e:
+    def softmax(x, axis=None):
+        x_max = np.amax(x, axis=axis, keepdims=True)
+        a = np.exp(x - x_max)
+        s = np.sum(a, axis=axis, keepdims=True)
+        return a / s
 
 
 # A beam entry containing a) the current sequence, b) a "state" containing any
