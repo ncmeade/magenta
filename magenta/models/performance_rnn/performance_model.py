@@ -555,4 +555,24 @@ default_configs = {
             magenta.music.MajorMinorPerformanceControlSignal(),
             magenta.music.RelativePositionControlSignal()
         ])
+
+    'cluster_and_major_minor_conditioned_performance_with_dynamics': PerformanceRnnConfig(
+        magenta.protobuf.generator_pb2.GeneratorDetails(
+            id='position_and_major_minor_conditioned_performance_with_dynamics',
+            description='Position and major minor conditioned performance.'),
+        magenta.music.OneHotEventSequenceEncoderDecoder(
+            magenta.music.PerformanceOneHotEncoding(
+                num_velocity_bins=32)),
+        tf.contrib.training.HParams(
+            batch_size=64,
+            rnn_layer_sizes=[512, 512, 512],
+            dropout_keep_prob=1.0,
+            clip_norm=3,
+            learning_rate=0.001),
+        num_velocity_bins=32,
+        control_signals=[
+            magenta.music.MajorMinorPerformanceControlSignal(),
+            magenta.music.ComposerClusterPerformanceControlSignal(
+                composers=COMPOSER_CLUSTERS)
+        ])
 }
