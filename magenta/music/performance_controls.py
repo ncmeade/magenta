@@ -34,7 +34,7 @@ DEFAULT_TIMEPLACE_VECTOR = [0.0, 0.0, 0.0]
 DEFAULT_DATASET_SIGNAL = [0.0, 0.0]
 COMPOSERS = constants.COMPOSER_SET
 DEFAULT_COMPOSER_HISTOGRAM = [0.0] * len (COMPOSERS)
-DEFAULT_VELOCITY_HISTOGRAM = [0.0, 0.0, 0.0]
+DEFAULT_VELOCITY_HISTOGRAM = [1.0, 1.0, 1.0]
 COMPOSER_CLUSTERS = constants.COMPOSER_CLUSTERS
 DEFAULT_COMPOSER_CLUSTER = [0.0] * (len(COMPOSER_CLUSTERS) + 1)
 MAJOR_MINOR_VECTOR = ['major', 'minor', None]
@@ -978,104 +978,129 @@ class TempoControlSignal(PerformanceControlSignal):
       raise NotImplementedError
 
 
-class VelocityPerformanceControlSignal(PerformanceControlSignal):
-  """Velocity performance control signal."""
+class VelocityHistogramPerformanceControlSignal(PerformanceControlSignal):
+  """Velocity class histogram performance control signal."""
 
-  name = 'velocity_histogram'
+  name = 'velocity_class_histogram'
   description = 'Desired weight for each of the 3 velocity classes.'
 
-  def __init__(self, window_size_seconds, velocity_bin_ranges):
-    """Initializes a VelocityPerformanceControlSignal.
+  def __init__(self, window_size_seconds, prior_count=0.01):
+    """Initializes a VelocityHistogramPerformanceControlSignal.
 
     Params:
-      window_size_seconds: The size of the window, in seconds, used to
-        compute the velocity histogram.
-      velocity_bin_ranges: List of velocity bin boundaries used to create
-        the velocity histogram
+      window_size_seconds: The size of the window, in seconds, used to compute
+          each histogram.
+      prior_count: A prior count to smooth the resulting histograms. This
+          will be added to the actual velocity class counts.
     """
     self._window_size_seconds = window_size_seconds
-    self._velocity_bin_ranges = velocity_bin_ranges
+    self._prior_count = prior_count
     self._encoder = self.VelocityHistogramEncoder()
-
-  def validate(self, value):
-    return (isinstance(value, list) and 
-            len(value) == len(DEFAULT_VELOCITY_HISTOGRAM) and
-            all(isinstance(val, numbers.Number) for val in value))
 
   @property
   def default_value(self):
     return DEFAULT_VELOCITY_HISTOGRAM
 
+  def validate(self, value):
+    return (isinstance(value, list) and 
+            len(value) == len(DEFAULT_VELOCITY_HISTOGRAM) and 
+            all(isinstance(a, numbers.Number) for a in value))
+  
   @property
   def encoder(self):
     return self._encoder
 
   def extract(self, performance):
-    """Computes the velocity histogram at every event in a performance.
+    """Computes a local velocity class histogram at every event in a 
+    performance.
 
     Params:
-      performance: A Performance object for which to compute the velocity
-        histogram sequence.
+      performance: A Performance object for which to compute a velocity class
+          histogram sequence.
 
     Returns:
-      A list of velocity histograms of the same length as `performance`.
+      A list of velocity class histograms the same length as `performance`, 
+      where each velocity class histogram is a length 3 list of float values
+      summing to one.
     """
     window_size_steps = int(round(
         self._window_size_seconds * performance.steps_per_second))
 
+    initial_velocity = 15  # Median of velocity distribution.
+    prev_event_type = None
+    prev_histogram = self.default_value
+
+    base_active_pitches = set()
     histogram_sequence = []
-    prev_velocity = None
-    
+
     for i, event in enumerate(performance):
+      # Initialize to last known velocity.
+      prev_velocity = initial_velocity
+
+      # Maintain the base set of active pitches.
+      if event.event_type == PerformanceEvent.NOTE_ON:
+        base_active_pitches.add((event.event_value, prev_velocity))
+      elif event.event_type == PerformanceEvent.NOTE_OFF:
+        base_active_pitches = {t for t in base_active_pitches 
+            if t[0] != event.event_value}
+      elif event.event_type == PerformanceEvent.VELOCITY:
+        prev_velocity = event.event_value
+
+      if (prev_event_type is not None and
+          prev_event_type != PerformanceEvent.TIME_SHIFT):
+        # The previous event didn't move us forward in time, so the histogram
+        # here should be the same.
+        histogram_sequence.append(prev_histogram)
+        prev_event_type = event.event_type
+        continue
+
       j = i
       step_offset = 0
-      histogram = [0, 0, 0]
 
-      # Step over window and build histogram over velocity events.
+      active_pitches = copy.deepcopy(base_active_pitches)
+      histogram = [self._prior_count] * len(DEFAULT_VELOCITY_HISTOGRAM)
+
+      # Count the total duration of each velocity class within the window.
       while step_offset < window_size_steps and j < len(performance):
-
-        if performance[j].event_type == PerformanceEvent.TIME_SHIFT:
-          step_offset += performance[j].event_value
-
-        elif (performance[j].event_type == PerformanceEvent.NOTE_ON and
-              prev_velocity is not None):
-          # Bin the NOTE_ON.
-          # TODO(ncmeade): Extract to function.
-          if prev_velocity < 15:
-            histogram[0] += 1
-          elif prev_velocity >= 15 and prev_velocity <= 19:
-            histogram[1] += 1
-          else:
-            histogram[2] += 1
-
+        if performance[j].event_type == PerformanceEvent.NOTE_ON:
+          active_pitches.add((performance[j].event_value, prev_velocity))
+        elif performance[j].event_type == PerformanceEvent.NOTE_OFF:
+          base_active_pitches = {t for t in base_active_pitches
+              if t[0] != event.event_value}
         elif performance[j].event_type == PerformanceEvent.VELOCITY:
           prev_velocity = performance[j].event_value
+        elif performance[j].event_type == PerformanceEvent.TIME_SHIFT:
+          for pitch in active_pitches:
+            # Bin the NOTE_ON.
+            # TODO(ncmeade): Extract to function.
+            if pitch[1] < 15:
+              histogram[0] += (
+                  performance[j].event_value / performance.steps_per_second)
+
+            elif pitch[1] >= 15 and pitch[1] <= 19:
+              histogram[1] += (
+                  performance[j].event_value / performance.steps_per_second)
+            else:
+              histogram[2] += (
+                  performance[j].event_value / performance.steps_per_second)
+            step_offset += performance[j].event_value
         j += 1
 
-      # If we're near the end of the performance, part of the window will
-      # necessarily be empty; we don't include this part of the window when
-      # calculating the histogram.
-      actual_window_size_steps = min(step_offset, window_size_steps)
+      histogram_sequence.append(histogram)
 
-      if actual_window_size_steps > 0:
-        count = sum(histogram)
-        # Only normalize if NOTE_ONs occurred within the window.
-        if count != 0:
-          histogram = [val / count for val in histogram]
-      else:
-        histogram = [0, 0, 0]
+      prev_event_type = event.event_type
+      prev_histogram = histogram
 
+      # Keep track of the latest velocity while stepping through events.
       if performance[i].event_type == PerformanceEvent.VELOCITY:
         initial_velocity = performance[i].event_value
 
-      histogram_sequence.append(histogram)
-    
     return histogram_sequence
-       
+
 
   class VelocityHistogramEncoder(encoder_decoder.EventSequenceEncoderDecoder):
     """An encoder for velocity class histogram sequences."""
-    
+
     @property
     def input_size(self):
       return len(DEFAULT_VELOCITY_HISTOGRAM)
@@ -1089,7 +1114,13 @@ class VelocityPerformanceControlSignal(PerformanceControlSignal):
       raise NotImplementedError
 
     def events_to_input(self, events, position):
-      return events[position]
+      # Normalize by the total weight.
+      total = sum(events[position])
+      if total > 0:
+        return [count / total for count in events[position]]
+      else:
+        return ([1.0 / len(DEFAULT_VELOCITY_HISTOGRAM)] * 
+            len(DEFAULT_VELOCITY_HISTOGRAM))
 
     def events_to_label(self, events, position):
       raise NotImplementedError
@@ -1255,8 +1286,8 @@ all_performance_control_signals = [
     TimePlacePerformanceControlSignal,
     TempoControlSignal,
     DatasetControlSignal,
-    VelocityPerformanceControlSignal,
     RelativePositionControlSignal,
     MajorMinorPerformanceControlSignal,
-    CenturyControlSignal
+    CenturyControlSignal,
+    VelocityHistogramPerformanceControlSignal
 ]
