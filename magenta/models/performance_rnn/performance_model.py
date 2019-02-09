@@ -554,7 +554,7 @@ default_configs = {
         control_signals=[
             magenta.music.MajorMinorPerformanceControlSignal(),
             magenta.music.RelativePositionControlSignal()
-        ])
+        ]),
 
     'cluster_and_major_minor_conditioned_performance_with_dynamics': PerformanceRnnConfig(
         magenta.protobuf.generator_pb2.GeneratorDetails(
