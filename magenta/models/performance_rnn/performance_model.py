@@ -596,10 +596,10 @@ default_configs = {
             magenta.music.RelativePositionControlSignal()
         ]),
 
-    'position_and_composer_conditioned_performance_with_dynamics': PerformanceRnnConfig(
+    'density_and_velocity_conditioned_performance_with_dynamics': PerformanceRnnConfig(
         magenta.protobuf.generator_pb2.GeneratorDetails(
-            id='position_and_composer_conditioned_performance_with_dynamics',
-            description='Position and composer conditioned performance.'),
+            id='density_and_velocity_conditioned_performance_with_dynamics',
+            description='Density and velocity conditioned performance.'),
         magenta.music.OneHotEventSequenceEncoderDecoder(
             magenta.music.PerformanceOneHotEncoding(
                 num_velocity_bins=32)),
