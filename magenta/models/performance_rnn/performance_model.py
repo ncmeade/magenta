@@ -456,7 +456,7 @@ default_configs = {
         num_velocity_bins=32,
         control_signals=[
             magenta.music.VelocityHistogramPerformanceControlSignal(
-                window_size_seconds=3.0)
+                window_size_seconds=5.0)
         ]),
 
     'relative_position_conditioned_performance_with_dynamics': PerformanceRnnConfig(

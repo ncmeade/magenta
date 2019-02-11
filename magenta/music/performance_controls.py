@@ -1065,7 +1065,7 @@ class VelocityHistogramPerformanceControlSignal(PerformanceControlSignal):
         if performance[j].event_type == PerformanceEvent.NOTE_ON:
           active_pitches.add((performance[j].event_value, prev_velocity))
         elif performance[j].event_type == PerformanceEvent.NOTE_OFF:
-          base_active_pitches = {t for t in base_active_pitches
+          active_pitches = {t for t in active_pitches 
               if t[0] != event.event_value}
         elif performance[j].event_type == PerformanceEvent.VELOCITY:
           prev_velocity = performance[j].event_value
