@@ -184,7 +184,7 @@ class BasePerformance(events_lib.EventSequence):
 
   @property
   def keywords(self):
-    return self.keywords
+    return self._keywords
   
   def _append_steps(self, num_steps):
     """Adds steps to the end of the sequence."""

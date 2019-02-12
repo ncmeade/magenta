@@ -422,6 +422,8 @@ class TempoWordPerformanceControlSignal(PerformanceControlSignal):
       A list of tempo keyword vectors the same length as `performance`.
       The values sum to one.
     """
+    if not performance.keywords:
+      return [DEFAULT_TEMPO_WORD_VECTOR] * len(performance)
 
     #TODO(NicholasBarreyre): see if there is a function for this
     keyword_list_str = ''
@@ -462,6 +464,7 @@ class TempoWordPerformanceControlSignal(PerformanceControlSignal):
       vector.append(0.0)
     
     vector_sequence = [vector] * len(performance)
+    return vector_sequence
 
   class TempoWordHistogramEncoder(encoder_decoder.EventSequenceEncoderDecoder):
     """An encoder for tempo word vector sequences."""
