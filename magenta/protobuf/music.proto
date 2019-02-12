@@ -442,5 +442,5 @@ message SequenceMetadata {
   string key_signature = 11;
 
   // Tempo keywords
-  repeated string keywords = 4;
+  repeated string keywords = 12;
 }
