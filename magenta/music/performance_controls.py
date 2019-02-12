@@ -42,6 +42,8 @@ TEMPO_KEYWORDS = ['allegro', 'allegretto', 'andante', 'adagio', 'presto']
 # the last two componenets of DEFAULT_TEMPO_WORD_VECTOR represent 'is mixed tempo'
 # and 'is unknown' respectively
 DEFAULT_TEMPO_WORD_VECTOR = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
+FORM_KEYWORDS = ['prelude',	'fugue',	'waltz',	'etude',	'variations',	'scherzo',	'impromptu',	'ballade',	'toccata',	'polonaise',	'nocturne',	'hungarian',	'dance',	'espagnol',	'intermezzo',	'mazurka']
+DEFAULT_FORM_WORD_VECTOR = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
 
 class PerformanceControlSignal(object):
   """Control signal used for conditional generation of performances.
@@ -420,7 +422,6 @@ class TempoWordPerformanceControlSignal(PerformanceControlSignal):
 
     Returns:
       A list of tempo keyword vectors the same length as `performance`.
-      The values sum to one.
     """
     if not performance.keywords:
       return [DEFAULT_TEMPO_WORD_VECTOR] * len(performance)
@@ -489,6 +490,120 @@ class TempoWordPerformanceControlSignal(PerformanceControlSignal):
 
     def class_index_to_event(self, class_index, events):
       raise NotImplementedError
+
+class FormWordPerformanceControlSignal(PerformanceControlSignal):
+  """Form keyword performance control signal."""
+
+  name = 'form_keyword_vector'
+  description = "Desired form"
+
+  def __init__(self):
+    """Initializes a FormWordPerformanceControlSignal.
+
+    Args:
+    """
+    self._encoder = self.FormWordHistogramEncoder()
+
+  @property
+  def default_value(self):
+    return DEFAULT_FORM_WORD_VECTOR
+
+  def validate(self, value):
+    return (isinstance(value, list) and len(value) == len(DEFAULT_FORM_WORD_VECTOR) and
+            all(isinstance(val, numbers.Number) for val in value))
+
+  @property
+  def encoder(self):
+    return self._encoder
+
+  def extract(self, performance):
+    """Creates form keyword vector at every event in a performance.
+
+    Args:
+      performance: A Performance object for which to create a form vector
+          sequence.
+
+    Returns:
+      A list of form keyword vectors the same length as `performance`.
+    """
+    if not performance.keywords:
+      return [DEFAULT_FORM_WORD_VECTOR] * len(performance)
+
+    #TODO(NicholasBarreyre): see if there is a function for this
+    keyword_list_str = ''
+    for char in performance.keywords:
+      keyword_list_str += char
+
+    # We need composers in order to ignore Bach and Handel for forms other than fugue
+    composer_list_str = ''
+    for char in performance.composers:
+      composer_list_str += char
+    
+    # parse string representation of list as a list
+    keywords = ast.literal_eval(keyword_list_str)
+    composers = ast.literal_eval(composer_list_str)
+
+    contains_bach_or_handel = 'Bach' in composers or 'Handel' in composers
+
+    # Extract keyword associated with form
+    form_indicators = []
+    for keyword in keywords:
+      if keyword in FORM_KEYWORDS:
+        form_indicators.append(keyword)
+
+    if contains_bach_or_handel and 'fugue' not in form_indicators:
+      return [DEFAULT_FORM_WORD_VECTOR] * len(performance)
+
+    if len(form_indicators) == 0:
+      vector = DEFAULT_FORM_WORD_VECTOR
+    else: 
+      vector = []
+
+      # weight each of the form indicators equally in the vector
+      weight = 1.0 / len(form_indicators)
+      default_weight = 0.0
+
+      for form_indicator in FORM_KEYWORDS:
+        if form_indicator in form_indicators:
+          vector.append(weight)
+        else:
+          vector.append(default_weight)
+      
+      # Now we add the last two components in the form_indicator vector
+      # These represent whether the signal 'is mixed' or doesn't exist
+      if len(form_indicator) != 1:
+        vector.append(1.0)
+
+      # because we're in the else block we know that there is a signal
+      vector.append(0.0)
+    
+    vector_sequence = [vector] * len(performance)
+    return vector_sequence
+
+  class FormWordHistogramEncoder(encoder_decoder.EventSequenceEncoderDecoder):
+    """An encoder for form word vector sequences."""
+
+    @property
+    def input_size(self):
+      return len(DEFAULT_FORM_WORD_VECTOR)
+
+    @property
+    def num_classes(self):
+      raise NotImplementedError
+
+    @property
+    def default_event_label(self):
+      raise NotImplementedError
+
+    def events_to_input(self, events, position):
+      return events[position]
+
+    def events_to_label(self, events, position):
+      raise NotImplementedError
+
+    def class_index_to_event(self, class_index, events):
+      raise NotImplementedError
+
 
 class ComposerClusterPerformanceControlSignal(PerformanceControlSignal):
   """Composer cluster histogram performance control signal."""
@@ -1296,5 +1411,6 @@ all_performance_control_signals = [
     VelocityPerformanceControlSignal,
     RelativePositionControlSignal,
     MajorMinorPerformanceControlSignal,
-    TempoWordPerformanceControlSignal
+    TempoWordPerformanceControlSignal,
+    FormWordPerformanceControlSignal
 ]
