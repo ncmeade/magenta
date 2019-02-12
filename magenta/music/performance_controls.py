@@ -38,6 +38,10 @@ DEFAULT_VELOCITY_HISTOGRAM = [0.0, 0.0, 0.0]
 COMPOSER_CLUSTERS = constants.COMPOSER_CLUSTERS
 DEFAULT_COMPOSER_CLUSTER = [0.0] * (len(COMPOSER_CLUSTERS) + 1)
 MAJOR_MINOR_VECTOR = ['major', 'minor', None]
+TEMPO_KEYWORDS = ['allegro', 'allegretto', 'andante', 'adagio', 'presto']
+# the last two componenets of DEFAULT_TEMPO_WORD_VECTOR represent 'is mixed tempo'
+# and 'is unknown' respectively
+DEFAULT_TEMPO_WORD_VECTOR = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
 
 class PerformanceControlSignal(object):
   """Control signal used for conditional generation of performances.
@@ -364,6 +368,107 @@ class ComposerHistogramPerformanceControlSignal(PerformanceControlSignal):
     @property
     def input_size(self):
       return len(DEFAULT_COMPOSER_HISTOGRAM)
+
+    @property
+    def num_classes(self):
+      raise NotImplementedError
+
+    @property
+    def default_event_label(self):
+      raise NotImplementedError
+
+    def events_to_input(self, events, position):
+      return events[position]
+
+    def events_to_label(self, events, position):
+      raise NotImplementedError
+
+    def class_index_to_event(self, class_index, events):
+      raise NotImplementedError
+
+class TempoWordPerformanceControlSignal(PerformanceControlSignal):
+  """Tempo keyword performance control signal."""
+
+  name = 'tempo_keyword_vector'
+  description = "Desired tempo"
+
+  def __init__(self):
+    """Initializes a TempoWordPerformanceControlSignal.
+
+    Args:
+    """
+    self._encoder = self.TempoWordHistogramEncoder()
+
+  @property
+  def default_value(self):
+    return DEFAULT_TEMPO_WORD_VECTOR
+
+  def validate(self, value):
+    return (isinstance(value, list) and len(value) == len(DEFAULT_TEMPO_WORD_VECTOR) and
+            all(isinstance(val, numbers.Number) for val in value))
+
+  @property
+  def encoder(self):
+    return self._encoder
+
+  def extract(self, performance):
+    """Creates tempo keyword vector at every event in a performance.
+
+    Args:
+      performance: A Performance object for which to create a tempo vector
+          sequence.
+
+    Returns:
+      A list of tempo keyword vectors the same length as `performance`.
+      The values sum to one.
+    """
+
+    #TODO(NicholasBarreyre): see if there is a function for this
+    keyword_list_str = ''
+    for char in performance.keywords:
+      keyword_list_str += char
+    
+    # parse string representation of list as a list
+    keywords = ast.literal_eval(keyword_list_str)
+
+    # Extract keyword associated with tempo
+    tempo_indicators = []
+    for keyword in keywords:
+      if keyword in TEMPO_KEYWORDS:
+        tempo_indicators.append(keyword)
+
+    
+    if len(tempo_indicators) == 0:
+      vector = DEFAULT_TEMPO_WORD_VECTOR
+    else: 
+      vector = []
+
+      # weight each of the tempo indicators equally in the vector
+      weight = 1.0 / len(tempo_indicators)
+      default_weight = 0.0
+
+      for tempo_indicator in TEMPO_KEYWORDS:
+        if tempo_indicator in tempo_indicators:
+          vector.append(weight)
+        else:
+          vector.append(default_weight)
+      
+      # Now we add the last two components in the tempo_indicator vector
+      # These represent whether the signal 'is mixed' or doesn't exist
+      if len(tempo_indicator) != 1:
+        vector.append(1.0)
+
+      # because we're in the else block we know that there is a signal
+      vector.append(0.0)
+    
+    vector_sequence = [vector] * len(performance)
+
+  class TempoWordHistogramEncoder(encoder_decoder.EventSequenceEncoderDecoder):
+    """An encoder for tempo word vector sequences."""
+
+    @property
+    def input_size(self):
+      return len(DEFAULT_TEMPO_WORD_VECTOR)
 
     @property
     def num_classes(self):
@@ -1187,5 +1292,6 @@ all_performance_control_signals = [
     DatasetControlSignal,
     VelocityPerformanceControlSignal,
     RelativePositionControlSignal,
-    MajorMinorPerformanceControlSignal
+    MajorMinorPerformanceControlSignal,
+    TempoWordPerformanceControlSignal
 ]
