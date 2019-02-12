@@ -849,7 +849,7 @@ def extract_performances(
                                 dataset=quantized_sequence.sequence_metadata.dataset,
                                 tempo_flag=quantized_sequence.sequence_metadata.tempo_flag,
                                 key_signature=quantized_sequence.sequence_metadata.key_signature,
-                                keywords.quantized_sequence.sequence_metadata.keywords)
+                                keywords=quantized_sequence.sequence_metadata.keywords)
     else:
       performance = MetricPerformance(quantized_sequence, start_step=start_step,
                                       num_velocity_bins=num_velocity_bins,
