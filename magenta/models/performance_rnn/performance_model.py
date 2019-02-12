@@ -435,6 +435,25 @@ default_configs = {
           magenta.music.MajorMinorPerformanceControlSignal()
         ]),
 
+    'tempo_and_form_performance_with_dynamics': PerformanceRnnConfig(
+        magenta.protobuf.generator_pb2.GeneratorDetails(
+            id='tempo_and_form_conditioned_performance_with_dynamics',
+            description='Tempo and form conditioned Performance RNN'),
+        magenta.music.OneHotEventSequenceEncoderDecoder(
+            magenta.music.PerformanceOneHotEncoding(
+                num_velocity_bins=32)),
+        tf.contrib.training.HParams(
+            batch_size=64,
+            rnn_layer_sizes=[512, 512, 512],
+            dropout_keep_prob=1.0,
+            clip_norm=3,
+            learning_rate=0.001),
+        num_velocity_bins=32,
+        control_signals=[
+            magenta.music.TempoWordPerformanceControlSignal(),
+            magenta.music.FormWordPerformanceControlSignal()
+        ]),
+
     'multiconditioned_performance_with_dynamics': PerformanceRnnConfig(
         magenta.protobuf.generator_pb2.GeneratorDetails(
             id='multiconditioned_performance_with_dynamics',
