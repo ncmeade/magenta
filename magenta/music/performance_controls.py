@@ -1083,7 +1083,7 @@ class VelocityHistogramPerformanceControlSignal(PerformanceControlSignal):
             else:
               histogram[2] += (
                   performance[j].event_value / performance.steps_per_second)
-            step_offset += performance[j].event_value
+          step_offset += performance[j].event_value
         j += 1
 
       histogram_sequence.append(histogram)
