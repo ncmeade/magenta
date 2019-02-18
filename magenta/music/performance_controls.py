@@ -41,9 +41,11 @@ MAJOR_MINOR_VECTOR = ['major', 'minor', None]
 TEMPO_KEYWORDS = ['allegro', 'allegretto', 'andante', 'adagio', 'presto']
 # the last two componenets of DEFAULT_TEMPO_WORD_VECTOR represent 'is mixed tempo'
 # and 'is unknown' respectively
-DEFAULT_TEMPO_WORD_VECTOR = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
-FORM_KEYWORDS = ['prelude',	'fugue',	'waltz',	'etude',	'variations',	'scherzo',	'impromptu',	'ballade',	'toccata',	'polonaise',	'nocturne',	'hungarian',	'dance',	'espagnol',	'intermezzo',	'mazurka']
-DEFAULT_FORM_WORD_VECTOR = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]
+assert len(TEMPO_KEYWORDS) > 0
+DEFAULT_TEMPO_WORD_VECTOR = [1 / len(TEMPO_KEYWORDS)] * len(TEMPO_KEYWORDS) 
+FORM_KEYWORDS = ['prelude',	'fugue', 'waltz',	'etude',	'variations',	'scherzo',	'impromptu',	'ballade',	'toccata',	'polonaise',	'nocturne',	'hungarian',	'dance',	'espagnol',	'intermezzo',	'mazurka']
+assert len(FORM_KEYWORDS) > 0
+DEFAULT_FORM_WORD_VECTOR = [1 / len(FORM_KEYWORDS)] * len(FORM_KEYWORDS)
 
 class PerformanceControlSignal(object):
   """Control signal used for conditional generation of performances.
@@ -455,14 +457,6 @@ class TempoWordPerformanceControlSignal(PerformanceControlSignal):
           vector.append(weight)
         else:
           vector.append(default_weight)
-      
-      # Now we add the last two components in the tempo_indicator vector
-      # These represent whether the signal 'is mixed' or doesn't exist
-      if len(tempo_indicator) != 1:
-        vector.append(1.0)
-
-      # because we're in the else block we know that there is a signal
-      vector.append(0.0)
     
     vector_sequence = [vector] * len(performance)
     return vector_sequence
@@ -568,14 +562,6 @@ class FormWordPerformanceControlSignal(PerformanceControlSignal):
           vector.append(weight)
         else:
           vector.append(default_weight)
-      
-      # Now we add the last two components in the form_indicator vector
-      # These represent whether the signal 'is mixed' or doesn't exist
-      if len(form_indicator) != 1:
-        vector.append(1.0)
-
-      # because we're in the else block we know that there is a signal
-      vector.append(0.0)
     
     vector_sequence = [vector] * len(performance)
     return vector_sequence
