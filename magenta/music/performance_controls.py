@@ -1166,6 +1166,10 @@ class RelativePositionControlSignal(PerformanceControlSignal):
     time_offset = 0
     position_sequence = []
 
+    # If this performance is an 'ending', append silence.
+    if performance.subsequence_info.end_time_offset == 0:
+      performance._append_steps(500)
+
     for event in performance:
       if event.event_type == PerformanceEvent.TIME_SHIFT:
         # Convert to seconds.
