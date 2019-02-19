@@ -616,5 +616,23 @@ default_configs = {
                 density_bin_ranges=[1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0]),
             magenta.music.VelocityHistogramPerformanceControlSignal(
                 window_size_seconds=5.0)
+        ]),
+
+    'static_velocity_conditioned_performance_with_dynamics': PerformanceRnnConfig(
+        magenta.protobuf.generator_pb2.GeneratorDetails(
+            id='static_velocity_conditioned_performance_with_dynamics',
+            description='Static velocity conditioned performance.'),
+        magenta.music.OneHotEventSequenceEncoderDecoder(
+            magenta.music.PerformanceOneHotEncoding(
+                num_velocity_bins=32)),
+        tf.contrib.training.HParams(
+            batch_size=64,
+            rnn_layer_sizes=[512, 512, 512],
+            dropout_keep_prob=1.0,
+            clip_norm=3,
+            learning_rate=0.001),
+        num_velocity_bins=32,
+        control_signals=[
+            magenta.music.StaticVelocityHistogramPerformanceControlSignal()
         ])
 }

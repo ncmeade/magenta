@@ -1277,7 +1277,99 @@ class CenturyControlSignal(PerformanceControlSignal):
 
     def class_index_to_event(self, class_index, events):
       raise NotImplementedError
-  
+
+
+class StaticVelocityHistogramPerformanceControlSignal(PerformanceControlSignal):
+  """Static velocity class histogram performance control signal."""
+
+  name = 'static_velocity_class_histogram'
+  description = 'Desired weight for each of the 3 velocity classes.'
+
+  def __init__(self, prior_count=0.01):
+    """Initializes a StaticVelocityHistogramPerformanceControlSignal.
+
+    Params:
+      prior_count: A prior count to smooth the resulting histograms. This
+          will be added to the actual velocity class counts.
+    """
+    self._prior_count = prior_count
+    self._encoder = self.StaticVelocityHistogramEncoder()
+
+  @property
+  def default_value(self):
+    return DEFAULT_VELOCITY_HISTOGRAM
+
+  def validate(self, value):
+    return (isinstance(value, list) and 
+            len(value) == len(DEFAULT_VELOCITY_HISTOGRAM) and 
+            all(isinstance(a, numbers.Number) for a in value))
+
+  @property
+  def encoder(self):
+    return self._encoder
+
+  def extract(self, performance):
+    """Computes the velocity class histogram for the performance.
+
+    Params:
+      performance: A Performance object for which to compute a velocity class
+          histogram sequence.
+
+    Returns:
+      A list of velocity class histograms the same length as `performance`,
+      where each velocity class histogram is a length 3 list of float values
+      summing to one.
+    """
+    # Initialize velocity to the median of the distribution.
+    prev_velocity = 15
+    histogram = [self._prior_count] * len(DEFAULT_VELOCITY_HISTOGRAM)
+
+    for i, event in enumerate(performance):
+      if event.event_type == PerformanceEvent.VELOCITY:
+        prev_velocity = event.event_value
+      elif event.event_type == PerformanceEvent.NOTE_ON:
+        if prev_velocity < 15:
+          histogram[0] += 1
+        elif prev_velocity >= 15 and prev_velocity <= 19:
+          histogram[1] += 1
+        else:
+          histogram[2] += 1
+    
+    histogram_sequence = [histogram] * len(performance)
+
+    return histogram_sequence 
+
+  class StaticVelocityHistogramEncoder(
+      encoder_decoder.EventSequenceEncoderDecoder):
+    """An encoder for static velocity class histogram sequences."""
+
+    @property
+    def input_size(self):
+      return len(DEFAULT_VELOCITY_HISTOGRAM)
+
+    @property
+    def num_classes(self):
+      raise NotImplementedError
+
+    @property
+    def default_event_label(self):
+      raise NotImplementedError
+
+    def events_to_input(self, events, position):
+      # Normalize by the total weight.
+      total = sum(events[position])
+      if total > 0:
+        return [count / total for count in events[position]]
+      else:
+        return ([1.0 / len(DEFAULT_VELOCITY_HISTOGRAM)] *
+            len(DEFAULT_VELOCITY_HISTOGRAM))
+   
+    def events_to_label(self, events, position):
+      raise NotImplementedError
+
+    def class_index_to_event(self, class_index, events):
+      raise NotImplementedError
+
 
 # List of performance control signal classes.
 all_performance_control_signals = [
@@ -1292,5 +1384,6 @@ all_performance_control_signals = [
     RelativePositionControlSignal,
     MajorMinorPerformanceControlSignal,
     CenturyControlSignal,
-    VelocityHistogramPerformanceControlSignal
+    VelocityHistogramPerformanceControlSignal,
+    StaticVelocityHistogramPerformanceControlSignal
 ]

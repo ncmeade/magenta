@@ -103,6 +103,7 @@ from magenta.music.performance_controls import RelativePositionControlSignal
 from magenta.music.performance_controls import MajorMinorPerformanceControlSignal
 from magenta.music.performance_controls import CenturyControlSignal
 from magenta.music.performance_controls import VelocityHistogramPerformanceControlSignal
+from magenta.music.performance_controls import StaticVelocityHistogramPerformanceControlSignal
 
 from magenta.music.performance_encoder_decoder import ModuloPerformanceEventSequenceEncoderDecoder
 from magenta.music.performance_encoder_decoder import PerformanceModuloEncoding
