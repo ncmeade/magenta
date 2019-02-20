@@ -462,7 +462,7 @@ class TempoWordPerformanceControlSignal(PerformanceControlSignal):
     vector_sequence = [vector] * len(performance)
     return vector_sequence
 
-class TempoWordHistogramEncoder(encoder_decoder.EventSequenceEncoderDecoder):
+  class TempoWordHistogramEncoder(encoder_decoder.EventSequenceEncoderDecoder):
     """An encoder for tempo word vector sequences."""
 
     @property
@@ -486,7 +486,7 @@ class TempoWordHistogramEncoder(encoder_decoder.EventSequenceEncoderDecoder):
     def class_index_to_event(self, class_index, events):
       raise NotImplementedError
 
-  class TempoBoostPerformanceControlSignal(PerformanceControlSignal):
+class TempoBoostPerformanceControlSignal(PerformanceControlSignal):
   """Tempo boost performance control signal."""
 
   name = 'tempo_keyword_vector'
