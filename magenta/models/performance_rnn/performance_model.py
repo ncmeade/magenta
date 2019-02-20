@@ -552,8 +552,8 @@ default_configs = {
             learning_rate=0.001),
         num_velocity_bins=32,
         control_signals=[
-            magenta.music.MajorMinorPerformanceControlSignal(),
             magenta.music.RelativePositionControlSignal()
+            magenta.music.MajorMinorPerformanceControlSignal(),
         ]),
 
     'cluster_and_major_minor_conditioned_performance_with_dynamics': PerformanceRnnConfig(
@@ -591,9 +591,9 @@ default_configs = {
             learning_rate=0.001),
         num_velocity_bins=32,
         control_signals=[
+            magenta.music.RelativePositionControlSignal(),
             magenta.music.ComposerHistogramPerformanceControlSignal(
                 composers=COMPOSER_SET),
-            magenta.music.RelativePositionControlSignal()
         ]),
 
     'density_and_velocity_conditioned_performance_with_dynamics': PerformanceRnnConfig(
