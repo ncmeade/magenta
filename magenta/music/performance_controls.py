@@ -43,6 +43,7 @@ TEMPO_KEYWORDS = ['allegro', 'allegretto', 'andante', 'adagio', 'presto']
 # and 'is unknown' respectively
 assert len(TEMPO_KEYWORDS) > 0
 DEFAULT_TEMPO_WORD_VECTOR = [1 / len(TEMPO_KEYWORDS)] * len(TEMPO_KEYWORDS) 
+DEFAULT_TEMPO_BOOST_VECTOR = [0] * len(TEMPO_KEYWORDS)
 FORM_KEYWORDS = ['prelude',	'fugue', 'waltz',	'etude',	'variations',	'scherzo',	'impromptu',	'ballade',	'toccata',	'polonaise',	'nocturne',	'hungarian',	'dance',	'espagnol',	'intermezzo',	'mazurka']
 assert len(FORM_KEYWORDS) > 0
 DEFAULT_FORM_WORD_VECTOR = [1 / len(FORM_KEYWORDS)] * len(FORM_KEYWORDS)
@@ -461,12 +462,107 @@ class TempoWordPerformanceControlSignal(PerformanceControlSignal):
     vector_sequence = [vector] * len(performance)
     return vector_sequence
 
-  class TempoWordHistogramEncoder(encoder_decoder.EventSequenceEncoderDecoder):
+class TempoWordHistogramEncoder(encoder_decoder.EventSequenceEncoderDecoder):
     """An encoder for tempo word vector sequences."""
 
     @property
     def input_size(self):
       return len(DEFAULT_TEMPO_WORD_VECTOR)
+
+    @property
+    def num_classes(self):
+      raise NotImplementedError
+
+    @property
+    def default_event_label(self):
+      raise NotImplementedError
+
+    def events_to_input(self, events, position):
+      return events[position]
+
+    def events_to_label(self, events, position):
+      raise NotImplementedError
+
+    def class_index_to_event(self, class_index, events):
+      raise NotImplementedError
+
+  class TempoBoostPerformanceControlSignal(PerformanceControlSignal):
+  """Tempo boost performance control signal."""
+
+  name = 'tempo_keyword_vector'
+  description = "Desired tempo"
+
+  def __init__(self):
+    """Initializes a TempoBoostPerformanceControlSignal.
+
+    Args:
+    """
+    self._encoder = self.TempoBoostHistogramEncoder()
+
+  @property
+  def default_value(self):
+    return DEFAULT_TEMPO_BOOST_VECTOR
+
+  def validate(self, value):
+    return (isinstance(value, list) and len(value) == len(DEFAULT_TEMPO_WORD_VECTOR) and
+            all(isinstance(val, numbers.Number) for val in value))
+
+  @property
+  def encoder(self):
+    return self._encoder
+
+  def extract(self, performance):
+    """Creates tempo keyword vector at every event in a performance.
+
+    Args:
+      performance: A Performance object for which to create a tempo vector
+          sequence.
+
+    Returns:
+      A list of tempo keyword vectors the same length as `performance`.
+    """
+    if not performance.keywords:
+      return [DEFAULT_TEMPO_BOOST_VECTOR] * len(performance)
+
+    #TODO(NicholasBarreyre): see if there is a function for this
+    keyword_list_str = ''
+    for char in performance.keywords:
+      keyword_list_str += char
+    
+    # parse string representation of list as a list
+    keywords = ast.literal_eval(keyword_list_str)
+
+    # Extract keyword associated with tempo
+    tempo_indicators = []
+    for keyword in keywords:
+      if keyword in TEMPO_KEYWORDS:
+        tempo_indicators.append(keyword)
+
+    
+    if len(tempo_indicators) == 0:
+      vector = DEFAULT_TEMPO_BOOST_VECTOR
+    else: 
+      vector = []
+
+      # weight each of the tempo indicators equally in the vector
+      weight = 1.0 / len(tempo_indicators)
+      default_weight = 0.0
+
+      for tempo_indicator in TEMPO_KEYWORDS:
+        if tempo_indicator in tempo_indicators:
+          vector.append(weight)
+        else:
+          vector.append(default_weight)
+    
+    vector_sequence = [vector] * len(performance)
+    return vector_sequence
+
+  class TempoBoostHistogramEncoder(encoder_decoder.EventSequenceEncoderDecoder):
+    """An encoder for tempo word vector sequences."""
+
+    @property
+    def input_size(self):
+      return len(DEFAULT_TEMPO_BOOST_VECTOR)
 
     @property
     def num_classes(self):

@@ -104,6 +104,7 @@ from magenta.music.performance_controls import RelativePositionControlSignal
 from magenta.music.performance_controls import MajorMinorPerformanceControlSignal
 from magenta.music.performance_controls import TempoWordPerformanceControlSignal
 from magenta.music.performance_controls import FormWordPerformanceControlSignal
+from magenta.music.performance_controls import TempoBoostPerformanceControlSignal
 
 from magenta.music.performance_encoder_decoder import ModuloPerformanceEventSequenceEncoderDecoder
 from magenta.music.performance_encoder_decoder import PerformanceModuloEncoding
