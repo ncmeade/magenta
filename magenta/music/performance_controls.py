@@ -34,7 +34,7 @@ DEFAULT_TIMEPLACE_VECTOR = [0.0, 0.0, 0.0]
 DEFAULT_DATASET_SIGNAL = [0.0, 0.0]
 COMPOSERS = constants.COMPOSER_SET
 DEFAULT_COMPOSER_HISTOGRAM = [0.0] * len (COMPOSERS)
-DEFAULT_VELOCITY_HISTOGRAM = [1.0, 1.0, 1.0]
+DEFAULT_VELOCITY_HISTOGRAM = [0.0, 0.0, 0.0, 0.0, 0.0]
 COMPOSER_CLUSTERS = constants.COMPOSER_CLUSTERS
 DEFAULT_COMPOSER_CLUSTER = [0.0] * (len(COMPOSER_CLUSTERS) + 1)
 MAJOR_MINOR_VECTOR = ['major', 'minor', None]
@@ -1285,14 +1285,16 @@ class StaticVelocityHistogramPerformanceControlSignal(PerformanceControlSignal):
   name = 'static_velocity_class_histogram'
   description = 'Desired weight for each of the 3 velocity classes.'
 
-  def __init__(self, prior_count=0.01):
+  def __init__(self, bin_boundaries, prior_count=0.01):
     """Initializes a StaticVelocityHistogramPerformanceControlSignal.
 
     Params:
       prior_count: A prior count to smooth the resulting histograms. This
           will be added to the actual velocity class counts.
+      bin_boundaries: The bin boundaries to use when computing the histograms.
     """
     self._prior_count = prior_count
+    self._bin_boundaries = bin_boundaries
     self._encoder = self.StaticVelocityHistogramEncoder()
 
   @property
@@ -1328,16 +1330,24 @@ class StaticVelocityHistogramPerformanceControlSignal(PerformanceControlSignal):
       if event.event_type == PerformanceEvent.VELOCITY:
         prev_velocity = event.event_value
       elif event.event_type == PerformanceEvent.NOTE_ON:
-        if prev_velocity < 15:
-          histogram[0] += 1
-        elif prev_velocity >= 15 and prev_velocity <= 19:
-          histogram[1] += 1
-        else:
-          histogram[2] += 1
+        histogram[self._to_histogram_bin(prev_velocity)] += 1
     
     histogram_sequence = [histogram] * len(performance)
 
     return histogram_sequence 
+
+  def _to_histogram_bin(self, velocity):
+    """Maps the velocity to a histogram bin.
+
+    Params:
+      velocity: The velocity to map to a histogram bin.
+
+    Returns:
+      The integer index of the bin to which the velocity is mapped.
+    """
+    for i, (lower_bound, upper_bound) in enumerate(self._bin_boundaries):
+      if velocity >= lower_bound and velocity <= upper_bound:
+        return i
 
   class StaticVelocityHistogramEncoder(
       encoder_decoder.EventSequenceEncoderDecoder):

@@ -633,6 +633,7 @@ default_configs = {
             learning_rate=0.001),
         num_velocity_bins=32,
         control_signals=[
-            magenta.music.StaticVelocityHistogramPerformanceControlSignal()
+            magenta.music.StaticVelocityHistogramPerformanceControlSignal(
+                bin_boundaries=[(0, 6), (7, 14), (15, 19), (20, 23), (24, 32)])
         ])
 }
