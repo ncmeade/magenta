@@ -37,7 +37,7 @@ DEFAULT_COMPOSER_HISTOGRAM = [0.0] * len (COMPOSERS)
 DEFAULT_VELOCITY_HISTOGRAM = [0.0, 0.0, 0.0]
 COMPOSER_CLUSTERS = constants.COMPOSER_CLUSTERS
 DEFAULT_COMPOSER_CLUSTER = [0.0] * (len(COMPOSER_CLUSTERS) + 1)
-MAJOR_MINOR_VECTOR = ['major', 'minor', None]
+MAJOR_MINOR_VECTOR = ['major', 'minor']
 TEMPO_KEYWORDS = ['allegro', 'allegretto', 'andante', 'adagio', 'presto']
 RANKED_TEMPO_KEYWORDS = ['adagio', 'andante', 'allegretto', 'allegro', 'presto'] 
 # the last two componenets of DEFAULT_TEMPO_WORD_VECTOR represent 'is mixed tempo'
@@ -240,7 +240,7 @@ class MajorMinorPerformanceControlSignal(PerformanceControlSignal):
     """
     self.vector = vector
     self._encoder = encoder_decoder.OneHotEventSequenceEncoderDecoder(
-        self.MajorMinorOneHotEncoding(vector))
+        self.MajorMinorHistogramEncoder())
 
   def validate(self, value):
     return value in self.vector
@@ -270,38 +270,35 @@ class MajorMinorPerformanceControlSignal(PerformanceControlSignal):
       key_sig += c
 
     if 'major' in key_sig:
-      return ['major'] * len(performance)
+      return [1.0, 0.0] * len(performance)
     elif 'minor' in key_sig:
-      return ['minor'] * len(performance)
+      return [0.0, 1.0] * len(performance)
     else:
-      return [None] * len(performance)
+      return [0.5,0.5] * len(performance)
 
-  class MajorMinorOneHotEncoding(encoder_decoder.OneHotEncoding):
-    """One-hot encoding of major or minor key in a performance."""
+  class MajorMinorHistogramEncoder(encoder_decoder.EventSequenceEncoderDecoder):
+    """An encoder for composer class histogram sequences."""
 
-    def __init__(self, vector=MAJOR_MINOR_VECTOR):
-      """Initialize a NoteDensityOneHotEncoding.
-
-      Args:
-        density_bin_ranges: List of note density (notes per second) bin
-            boundaries to use when quantizing. The number of bins will be one
-            larger than the list length.
-      """
-      self._vector = vector
+    @property
+    def input_size(self):
+      return len(MAJOR_MINOR_VECTOR)
 
     @property
     def num_classes(self):
-      return len(self._vector)
+      raise NotImplementedError
 
     @property
-    def default_event(self):
-      return self._vector.index(None)
+    def default_event_label(self):
+      raise NotImplementedError
 
-    def encode_event(self, event):
-      return self._vector.index(event)
+    def events_to_input(self, events, position):
+      return events[position]
 
-    def decode_event(self, index):
-      return self._vector[index]
+    def events_to_label(self, events, position):
+      raise NotImplementedError
+
+    def class_index_to_event(self, class_index, events):
+      raise NotImplementedError
 
 
 class ComposerHistogramPerformanceControlSignal(PerformanceControlSignal):
