@@ -284,8 +284,8 @@ class MajorMinorPerformanceControlSignal(PerformanceControlSignal):
 
     @property
     def num_classes(self):
-      raise len(MAJOR_MINOR_VECTOR)
-      
+      return len(MAJOR_MINOR_VECTOR)
+
     @property
     def default_event_label(self):
       raise NotImplementedError
