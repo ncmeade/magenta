@@ -37,7 +37,18 @@ DEFAULT_COMPOSER_HISTOGRAM = [0.0] * len (COMPOSERS)
 DEFAULT_VELOCITY_HISTOGRAM = [0.0, 0.0, 0.0, 0.0, 0.0]
 COMPOSER_CLUSTERS = constants.COMPOSER_CLUSTERS
 DEFAULT_COMPOSER_CLUSTER = [0.0] * (len(COMPOSER_CLUSTERS) + 1)
-MAJOR_MINOR_VECTOR = ['major', 'minor', None]
+MAJOR_MINOR_VECTOR = ['major', 'minor']
+TEMPO_KEYWORDS = ['allegro', 'allegretto', 'andante', 'adagio', 'presto']
+RANKED_TEMPO_KEYWORDS = ['adagio', 'andante', 'allegretto', 'allegro', 'presto'] 
+# the last two componenets of DEFAULT_TEMPO_WORD_VECTOR represent 'is mixed tempo'
+# and 'is unknown' respectively
+assert len(TEMPO_KEYWORDS) > 0
+DEFAULT_TEMPO_WORD_VECTOR = [1 / len(TEMPO_KEYWORDS)] * len(TEMPO_KEYWORDS) 
+DEFAULT_TEMPO_BOOST_VECTOR = [0] * len(TEMPO_KEYWORDS)
+FORM_KEYWORDS = ['prelude',	'fugue', 'waltz',	'etude',	'variations',	'scherzo',	'impromptu',	'ballade',	'toccata',	'polonaise',	'nocturne',	'hungarian',	'dance',	'espagnol',	'intermezzo',	'mazurka']
+assert len(FORM_KEYWORDS) > 0
+DEFAULT_FORM_WORD_VECTOR = [1 / len(FORM_KEYWORDS)] * len(FORM_KEYWORDS)
+
 
 class PerformanceControlSignal(object):
   """Control signal used for conditional generation of performances.
@@ -230,7 +241,7 @@ class MajorMinorPerformanceControlSignal(PerformanceControlSignal):
     """
     self.vector = vector
     self._encoder = encoder_decoder.OneHotEventSequenceEncoderDecoder(
-        self.MajorMinorOneHotEncoding(vector))
+        self.MajorMinorHistogramEncoder())
 
   def validate(self, value):
     return value in self.vector
@@ -260,38 +271,35 @@ class MajorMinorPerformanceControlSignal(PerformanceControlSignal):
       key_sig += c
 
     if 'major' in key_sig:
-      return ['major'] * len(performance)
+      return [1.0, 0.0] * len(performance)
     elif 'minor' in key_sig:
-      return ['minor'] * len(performance)
+      return [0.0, 1.0] * len(performance)
     else:
-      return [None] * len(performance)
+      return [0.5,0.5] * len(performance)
 
-  class MajorMinorOneHotEncoding(encoder_decoder.OneHotEncoding):
-    """One-hot encoding of major or minor key in a performance."""
+  class MajorMinorHistogramEncoder(encoder_decoder.EventSequenceEncoderDecoder):
+    """An encoder for composer class histogram sequences."""
 
-    def __init__(self, vector=MAJOR_MINOR_VECTOR):
-      """Initialize a NoteDensityOneHotEncoding.
-
-      Args:
-        density_bin_ranges: List of note density (notes per second) bin
-            boundaries to use when quantizing. The number of bins will be one
-            larger than the list length.
-      """
-      self._vector = vector
+    @property
+    def input_size(self):
+      return len(MAJOR_MINOR_VECTOR)
 
     @property
     def num_classes(self):
-      return len(self._vector)
+      raise NotImplementedError
 
     @property
-    def default_event(self):
-      return self._vector.index(None)
+    def default_event_label(self):
+      raise NotImplementedError
 
-    def encode_event(self, event):
-      return self._vector.index(event)
+    def events_to_input(self, events, position):
+      return events[position]
 
-    def decode_event(self, index):
-      return self._vector[index]
+    def events_to_label(self, events, position):
+      raise NotImplementedError
+
+    def class_index_to_event(self, class_index, events):
+      raise NotImplementedError
 
 
 class ComposerHistogramPerformanceControlSignal(PerformanceControlSignal):
@@ -382,6 +390,405 @@ class ComposerHistogramPerformanceControlSignal(PerformanceControlSignal):
     def class_index_to_event(self, class_index, events):
       raise NotImplementedError
 
+class TempoWordPerformanceControlSignal(PerformanceControlSignal):
+  """Tempo keyword performance control signal."""
+
+  name = 'tempo_keyword_vector'
+  description = "Desired tempo"
+
+  def __init__(self):
+    """Initializes a TempoWordPerformanceControlSignal.
+
+    Args:
+    """
+    self._encoder = self.TempoWordHistogramEncoder()
+
+  @property
+  def default_value(self):
+    return DEFAULT_TEMPO_WORD_VECTOR
+
+  def validate(self, value):
+    return (isinstance(value, list) and len(value) == len(DEFAULT_TEMPO_WORD_VECTOR) and
+            all(isinstance(val, numbers.Number) for val in value))
+
+  @property
+  def encoder(self):
+    return self._encoder
+
+  def extract(self, performance):
+    """Creates tempo keyword vector at every event in a performance.
+
+    Args:
+      performance: A Performance object for which to create a tempo vector
+          sequence.
+
+    Returns:
+      A list of tempo keyword vectors the same length as `performance`.
+    """
+    if not performance.keywords:
+      return [DEFAULT_TEMPO_WORD_VECTOR] * len(performance)
+
+    #TODO(NicholasBarreyre): see if there is a function for this
+    keyword_list_str = ''
+    for char in performance.keywords:
+      keyword_list_str += char
+    
+    # parse string representation of list as a list
+    keywords = ast.literal_eval(keyword_list_str)
+
+    # Extract keyword associated with tempo
+    tempo_indicators = []
+    for keyword in keywords:
+      if keyword in TEMPO_KEYWORDS:
+        tempo_indicators.append(keyword)
+
+    
+    if len(tempo_indicators) == 0:
+      vector = DEFAULT_TEMPO_WORD_VECTOR
+    else: 
+      vector = []
+
+      # weight each of the tempo indicators equally in the vector
+      weight = 1.0 / len(tempo_indicators)
+      default_weight = 0.0
+
+      for tempo_indicator in TEMPO_KEYWORDS:
+        if tempo_indicator in tempo_indicators:
+          vector.append(weight)
+        else:
+          vector.append(default_weight)
+    
+    vector_sequence = [vector] * len(performance)
+    return vector_sequence
+
+  class TempoWordHistogramEncoder(encoder_decoder.EventSequenceEncoderDecoder):
+    """An encoder for tempo word vector sequences."""
+
+    @property
+    def input_size(self):
+      return len(DEFAULT_TEMPO_WORD_VECTOR)
+
+    @property
+    def num_classes(self):
+      raise NotImplementedError
+
+    @property
+    def default_event_label(self):
+      raise NotImplementedError
+
+    def events_to_input(self, events, position):
+      return events[position]
+
+    def events_to_label(self, events, position):
+      raise NotImplementedError
+
+    def class_index_to_event(self, class_index, events):
+      raise NotImplementedError
+
+class TempoBoostPerformanceControlSignal(PerformanceControlSignal):
+  """Tempo boost performance control signal."""
+
+  name = 'tempo_boost_vector'
+  description = "Desired tempo"
+
+  def __init__(self):
+    """Initializes a TempoBoostPerformanceControlSignal.
+
+    Args:
+    """
+    self._encoder = self.TempoBoostHistogramEncoder()
+
+  @property
+  def default_value(self):
+    return DEFAULT_TEMPO_BOOST_VECTOR
+
+  def validate(self, value):
+    return (isinstance(value, list) and len(value) == len(DEFAULT_TEMPO_WORD_VECTOR) and
+            all(isinstance(val, numbers.Number) for val in value))
+
+  @property
+  def encoder(self):
+    return self._encoder
+
+  def extract(self, performance):
+    """Creates tempo keyword vector at every event in a performance.
+
+    Args:
+      performance: A Performance object for which to create a tempo vector
+          sequence.
+
+    Returns:
+      A list of tempo keyword vectors the same length as `performance`.
+    """
+    if not performance.keywords:
+      return [DEFAULT_TEMPO_BOOST_VECTOR] * len(performance)
+
+    #TODO(NicholasBarreyre): see if there is a function for this
+    keyword_list_str = ''
+    for char in performance.keywords:
+      keyword_list_str += char
+    
+    # parse string representation of list as a list
+    keywords = ast.literal_eval(keyword_list_str)
+
+    # Extract keyword associated with tempo
+    tempo_indicators = []
+    for keyword in keywords:
+      if keyword in TEMPO_KEYWORDS:
+        tempo_indicators.append(keyword)
+
+    
+    if len(tempo_indicators) == 0:
+      vector = DEFAULT_TEMPO_BOOST_VECTOR
+    else: 
+      vector = []
+
+      # weight each of the tempo indicators equally in the vector
+      weight = 1.0 / len(tempo_indicators)
+      default_weight = 0.0
+
+      for tempo_indicator in TEMPO_KEYWORDS:
+        if tempo_indicator in tempo_indicators:
+          vector.append(weight)
+        else:
+          vector.append(default_weight)
+    
+    vector_sequence = [vector] * len(performance)
+    return vector_sequence
+
+  class TempoBoostHistogramEncoder(encoder_decoder.EventSequenceEncoderDecoder):
+    """An encoder for tempo word vector sequences."""
+
+    @property
+    def input_size(self):
+      return len(DEFAULT_TEMPO_BOOST_VECTOR)
+
+    @property
+    def num_classes(self):
+      raise NotImplementedError
+
+    @property
+    def default_event_label(self):
+      raise NotImplementedError
+
+    def events_to_input(self, events, position):
+      return events[position]
+
+    def events_to_label(self, events, position):
+      raise NotImplementedError
+
+    def class_index_to_event(self, class_index, events):
+      raise NotImplementedError
+
+class TempoRankHotPerformanceControlSignal(PerformanceControlSignal):
+  """Tempo rank-hot performance control signal."""
+
+  name = 'tempo_rank_hot'
+  description = "Desired tempo rank-hot"
+
+  def __init__(self):
+    """Initializes a TempoBoostPerformanceControlSignal.
+
+    Args:
+    """
+    self._encoder = self.TempoRankHotEncoder()
+
+  @property
+  def default_value(self):
+    return DEFAULT_TEMPO_BOOST_VECTOR
+
+  def validate(self, value):
+    return (isinstance(value, list) and len(value) == len(DEFAULT_TEMPO_WORD_VECTOR) and
+            all(isinstance(val, numbers.Number) for val in value))
+
+  @property
+  def encoder(self):
+    return self._encoder
+
+  def extract(self, performance):
+    """Creates tempo rank hot vector at every event in a performance.
+
+    Args:
+      performance: A Performance object for which to create a tempo vector
+          sequence.
+
+    Returns:
+      A list of tempo rank hot vectors the same length as `performance`.
+    """
+    if not performance.keywords:
+      return [DEFAULT_TEMPO_BOOST_VECTOR] * len(performance)
+
+    #TODO(NicholasBarreyre): see if there is a function for this
+    keyword_list_str = ''
+    for char in performance.keywords:
+      keyword_list_str += char
+    
+    # parse string representation of list as a list
+    keywords = ast.literal_eval(keyword_list_str)
+
+    # Extract keyword associated with tempo
+    tempo_indicators = []
+    for keyword in keywords:
+      if keyword in TEMPO_KEYWORDS:
+        tempo_indicators.append(keyword)
+
+    
+    vector = DEFAULT_TEMPO_BOOST_VECTOR
+
+    if len(tempo_indicators) != 0: 
+
+      # weight each of the tempo indicators equally in the vector
+      weight = 1.0 / len(tempo_indicators)
+
+      # index of the halfway point (equivalent to the ceiling)
+      half_way = len(RANKED_TEMPO_KEYWORDS) // 2
+
+      for tempo in tempo_indicators:
+        tempo_index = RANKED_TEMPO_KEYWORDS.index(tempo)
+
+        i = half_way
+        if tempo_index < half_way:      
+          while i >= tempo_index:
+            vector[i] += weight
+            i -= 1
+        else:
+          while i <= tempo_index:
+            vector[i] += weight
+            i += 1
+    
+    vector_sequence = [vector] * len(performance)
+    return vector_sequence
+
+  class TempoRankHotEncoder(encoder_decoder.EventSequenceEncoderDecoder):
+    """An encoder for tempo rank-hot vector sequences."""
+
+    @property
+    def input_size(self):
+      return len(DEFAULT_TEMPO_BOOST_VECTOR)
+
+    @property
+    def num_classes(self):
+      raise NotImplementedError
+
+    @property
+    def default_event_label(self):
+      raise NotImplementedError
+
+    def events_to_input(self, events, position):
+      return events[position]
+
+    def events_to_label(self, events, position):
+      raise NotImplementedError
+
+    def class_index_to_event(self, class_index, events):
+      raise NotImplementedError
+
+class FormWordPerformanceControlSignal(PerformanceControlSignal):
+  """Form keyword performance control signal."""
+
+  name = 'form_keyword_vector'
+  description = "Desired form"
+
+  def __init__(self):
+    """Initializes a FormWordPerformanceControlSignal.
+
+    Args:
+    """
+    self._encoder = self.FormWordHistogramEncoder()
+
+  @property
+  def default_value(self):
+    return DEFAULT_FORM_WORD_VECTOR
+
+  def validate(self, value):
+    return (isinstance(value, list) and len(value) == len(DEFAULT_FORM_WORD_VECTOR) and
+            all(isinstance(val, numbers.Number) for val in value))
+
+  @property
+  def encoder(self):
+    return self._encoder
+
+  def extract(self, performance):
+    """Creates form keyword vector at every event in a performance.
+
+    Args:
+      performance: A Performance object for which to create a form vector
+          sequence.
+
+    Returns:
+      A list of form keyword vectors the same length as `performance`.
+    """
+    if not performance.keywords:
+      return [DEFAULT_FORM_WORD_VECTOR] * len(performance)
+
+    #TODO(NicholasBarreyre): see if there is a function for this
+    keyword_list_str = ''
+    for char in performance.keywords:
+      keyword_list_str += char
+
+    # We need composers in order to ignore Bach and Handel for forms other than fugue
+    composer_list_str = ''
+    for char in performance.composers:
+      composer_list_str += char
+    
+    # parse string representation of list as a list
+    keywords = ast.literal_eval(keyword_list_str)
+    composers = ast.literal_eval(composer_list_str)
+
+    contains_bach_or_handel = 'Bach' in composers or 'Handel' in composers
+
+    # Extract keyword associated with form
+    form_indicators = []
+    for keyword in keywords:
+      if keyword in FORM_KEYWORDS:
+        form_indicators.append(keyword)
+
+    if contains_bach_or_handel and 'fugue' not in form_indicators:
+      return [DEFAULT_FORM_WORD_VECTOR] * len(performance)
+
+    if len(form_indicators) == 0:
+      vector = DEFAULT_FORM_WORD_VECTOR
+    else: 
+      vector = []
+
+      # weight each of the form indicators equally in the vector
+      weight = 1.0 / len(form_indicators)
+      default_weight = 0.0
+
+      for form_indicator in FORM_KEYWORDS:
+        if form_indicator in form_indicators:
+          vector.append(weight)
+        else:
+          vector.append(default_weight)
+    
+    vector_sequence = [vector] * len(performance)
+    return vector_sequence
+
+  class FormWordHistogramEncoder(encoder_decoder.EventSequenceEncoderDecoder):
+    """An encoder for form word vector sequences."""
+
+    @property
+    def input_size(self):
+      return len(DEFAULT_FORM_WORD_VECTOR)
+
+    @property
+    def num_classes(self):
+      raise NotImplementedError
+
+    @property
+    def default_event_label(self):
+      raise NotImplementedError
+
+    def events_to_input(self, events, position):
+      return events[position]
+
+    def events_to_label(self, events, position):
+      raise NotImplementedError
+
+    def class_index_to_event(self, class_index, events):
+      raise NotImplementedError
+
+
 class ComposerClusterPerformanceControlSignal(PerformanceControlSignal):
   """Composer cluster histogram performance control signal."""
 
@@ -402,7 +809,7 @@ class ComposerClusterPerformanceControlSignal(PerformanceControlSignal):
     return DEFAULT_COMPOSER_CLUSTER
 
   def validate(self, value):
-    return (isinstance(value, list) and len(value) == len(COMPOSER_CLUSTERS) and
+    return (isinstance(value, list) and len(value) == (len(COMPOSER_CLUSTERS) + 1) and
             all(isinstance(val, numbers.Number) for val in value))
 
   @property
@@ -452,7 +859,7 @@ class ComposerClusterPerformanceControlSignal(PerformanceControlSignal):
 
     @property
     def input_size(self):
-      return len(DEFAULT_COMPOSER_CLUSTER)
+      return len(COMPOSER_CLUSTERS) + 1
 
     @property
     def num_classes(self):
@@ -1168,7 +1575,7 @@ class RelativePositionControlSignal(PerformanceControlSignal):
 
     # If this performance is an 'ending', append silence.
     if performance.subsequence_info.end_time_offset == 0:
-      performance._append_steps(500)
+      performance._append_steps(1500)
 
     for event in performance:
       if event.event_type == PerformanceEvent.TIME_SHIFT:
@@ -1395,5 +1802,9 @@ all_performance_control_signals = [
     MajorMinorPerformanceControlSignal,
     CenturyControlSignal,
     VelocityHistogramPerformanceControlSignal,
-    StaticVelocityHistogramPerformanceControlSignal
+    StaticVelocityHistogramPerformanceControlSignal,
+    TempoWordPerformanceControlSignal,
+    FormWordPerformanceControlSignal,
+    TempoBoostPerformanceControlSignal,
+    TempoRankHotPerformanceControlSignal
 ]

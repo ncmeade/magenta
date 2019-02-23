@@ -57,8 +57,8 @@ do
         continue # Skip json files
 	else
 		NAME=$( basename "$FILE" .mid )
-		ln ${INPUT_DIRECTORY}/${NAME}.mid $TEMP_DIR_IN/inputs$(( i % PROCESSES ))
-		ln ${INPUT_DIRECTORY}/${NAME}.json $TEMP_DIR_IN/inputs$(( i % PROCESSES ))
+		ln -s ${INPUT_DIRECTORY}/${NAME}.mid $TEMP_DIR_IN/inputs$(( i % PROCESSES ))
+		ln -s ${INPUT_DIRECTORY}/${NAME}.json $TEMP_DIR_IN/inputs$(( i % PROCESSES ))
 		(( i++ ))
 	fi
 done

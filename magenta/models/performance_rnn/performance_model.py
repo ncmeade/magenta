@@ -38,8 +38,8 @@ class PerformanceRnnModel(events_rnn_model.EventSequenceRnnModel):
 
   def generate_performance(
       self, num_steps, primer_sequence, temperature=1.0, beam_size=1,
-      branch_factor=1, steps_per_iteration=1, control_signal_fns=None,
-      disable_conditioning_fn=None):
+      branch_factor=1, steps_per_iteration=1, beam_temperature=0.0,
+      control_signal_fns=None, disable_conditioning_fn=None):
     """Generate a performance track from a primer performance track.
 
     Args:
@@ -54,6 +54,10 @@ class PerformanceRnnModel(events_rnn_model.EventSequenceRnnModel):
       branch_factor: An integer, beam search branch factor to use.
       steps_per_iteration: An integer, number of steps to take per beam search
           iteration.
+      beam_temperature: A float specifying how much to divide log-likelihoods
+          by before computing the softmax during beam search. Set to 0.0 to
+          pick the top-k samples instead of probabilistically choosing which
+          beams to keep.
       control_signal_fns: A list of functions that map time step to desired
           control value, or None if not using control signals.
       disable_conditioning_fn: A function that maps time step to whether or not
@@ -80,8 +84,8 @@ class PerformanceRnnModel(events_rnn_model.EventSequenceRnnModel):
 
     return self._generate_events(
         num_steps, primer_sequence, temperature, beam_size, branch_factor,
-        steps_per_iteration, control_events=control_events,
-        control_state=control_state,
+        steps_per_iteration, beam_temperature=beam_temperature,
+        control_events=control_events, control_state=control_state,
         extend_control_events_callback=extend_control_events_callback)
 
   def performance_log_likelihood(self, sequence, control_values,
@@ -359,6 +363,78 @@ default_configs = {
           magenta.music.TempoControlSignal()
         ]),
 
+    'tempo_word_conditioned_performance_with_dynamics': PerformanceRnnConfig(
+        magenta.protobuf.generator_pb2.GeneratorDetails(
+            id='tempo_word_conditioned_performance_with_dynamics',
+            description='Tempo-word-conditioned Performance RNN'),
+        magenta.music.OneHotEventSequenceEncoderDecoder(
+            magenta.music.PerformanceOneHotEncoding(
+                num_velocity_bins=32)),
+        tf.contrib.training.HParams(
+            batch_size=64,
+            rnn_layer_sizes=[512, 512, 512],
+            dropout_keep_prob=1.0,
+            clip_norm=3,
+            learning_rate=0.001),
+        num_velocity_bins=32,
+        control_signals=[
+            magenta.music.TempoWordPerformanceControlSignal()
+        ]),
+
+    'tempo_rank_hot_conditioned_performance_with_dynamics': PerformanceRnnConfig(
+        magenta.protobuf.generator_pb2.GeneratorDetails(
+            id='tempo_word_conditioned_performance_with_dynamics',
+            description='Tempo-word-conditioned Performance RNN'),
+        magenta.music.OneHotEventSequenceEncoderDecoder(
+            magenta.music.PerformanceOneHotEncoding(
+                num_velocity_bins=32)),
+        tf.contrib.training.HParams(
+            batch_size=64,
+            rnn_layer_sizes=[512, 512, 512],
+            dropout_keep_prob=1.0,
+            clip_norm=3,
+            learning_rate=0.001),
+        num_velocity_bins=32,
+        control_signals=[
+            magenta.music.TempoRankHotPerformanceControlSignal()
+        ]),
+
+    'tempo_boost_conditioned_performance_with_dynamics': PerformanceRnnConfig(
+        magenta.protobuf.generator_pb2.GeneratorDetails(
+            id='tempo_word_conditioned_performance_with_dynamics',
+            description='Tempo-word-conditioned Performance RNN'),
+        magenta.music.OneHotEventSequenceEncoderDecoder(
+            magenta.music.PerformanceOneHotEncoding(
+                num_velocity_bins=32)),
+        tf.contrib.training.HParams(
+            batch_size=64,
+            rnn_layer_sizes=[512, 512, 512],
+            dropout_keep_prob=1.0,
+            clip_norm=3,
+            learning_rate=0.001),
+        num_velocity_bins=32,
+        control_signals=[
+            magenta.music.TempoBoostPerformanceControlSignal()
+        ]),
+
+    'form_word_conditioned_performance_with_dynamics': PerformanceRnnConfig(
+        magenta.protobuf.generator_pb2.GeneratorDetails(
+            id='form_word_conditioned_performance_with_dynamics',
+            description='Form-conditioned Performance RNN'),
+        magenta.music.OneHotEventSequenceEncoderDecoder(
+            magenta.music.PerformanceOneHotEncoding(
+                num_velocity_bins=32)),
+        tf.contrib.training.HParams(
+            batch_size=64,
+            rnn_layer_sizes=[512, 512, 512],
+            dropout_keep_prob=1.0,
+            clip_norm=3,
+            learning_rate=0.001),
+        num_velocity_bins=32,
+        control_signals=[
+            magenta.music.FormWordPerformanceControlSignal()
+        ]),
+
   'dataset_conditioned_performance_with_dynamics': PerformanceRnnConfig(
         magenta.protobuf.generator_pb2.GeneratorDetails(
             id='dataset_conditioned_performance_with_dynamics',
@@ -393,6 +469,25 @@ default_configs = {
         num_velocity_bins=32,
         control_signals=[
           magenta.music.MajorMinorPerformanceControlSignal()
+        ]),
+
+    'tempo_and_form_performance_with_dynamics': PerformanceRnnConfig(
+        magenta.protobuf.generator_pb2.GeneratorDetails(
+            id='tempo_and_form_conditioned_performance_with_dynamics',
+            description='Tempo and form conditioned Performance RNN'),
+        magenta.music.OneHotEventSequenceEncoderDecoder(
+            magenta.music.PerformanceOneHotEncoding(
+                num_velocity_bins=32)),
+        tf.contrib.training.HParams(
+            batch_size=64,
+            rnn_layer_sizes=[512, 512, 512],
+            dropout_keep_prob=1.0,
+            clip_norm=3,
+            learning_rate=0.001),
+        num_velocity_bins=32,
+        control_signals=[
+            magenta.music.TempoWordPerformanceControlSignal(),
+            magenta.music.FormWordPerformanceControlSignal()
         ]),
 
     'multiconditioned_performance_with_dynamics': PerformanceRnnConfig(

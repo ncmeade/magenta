@@ -98,6 +98,7 @@ def midi_to_sequence_proto(midi_data, metadata=None):
     sequence.sequence_metadata.lon = str(metadata['longitude'])
     sequence.sequence_metadata.dataset = metadata['dataset']
     sequence.sequence_metadata.key_signature = str(metadata['key_signature'])
+    sequence.sequence_metadata.keywords.extend(str(metadata['keywords']))
 
   # Populate header.
   sequence.ticks_per_quarter = midi.resolution
