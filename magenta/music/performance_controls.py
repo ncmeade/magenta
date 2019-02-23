@@ -270,11 +270,11 @@ class MajorMinorPerformanceControlSignal(PerformanceControlSignal):
       key_sig += c
 
     if 'major' in key_sig:
-      return [1.0, 0.0] * len(performance)
+      return [[1.0, 0.0]] * len(performance)
     elif 'minor' in key_sig:
-      return [0.0, 1.0] * len(performance)
+      return [[0.0, 1.0]] * len(performance)
     else:
-      return [0.5,0.5] * len(performance)
+      return [[0.5,0.5]] * len(performance)
 
   class MajorMinorHistogramEncoder(encoder_decoder.EventSequenceEncoderDecoder):
     """An encoder for composer class histogram sequences."""
@@ -285,7 +285,7 @@ class MajorMinorPerformanceControlSignal(PerformanceControlSignal):
 
     @property
     def num_classes(self):
-      return len(MAJOR_MINOR_VECTOR)
+      raise NotImplementedError
 
     @property
     def default_event_label(self):
