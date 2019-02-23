@@ -240,8 +240,7 @@ class MajorMinorPerformanceControlSignal(PerformanceControlSignal):
       vector - list of possible values
     """
     self.vector = vector
-    self._encoder = encoder_decoder.OneHotEventSequenceEncoderDecoder(
-        self.MajorMinorHistogramEncoder())
+    self._encoder = self.MajorMinorHistogramEncoder()
 
   def validate(self, value):
     return value in self.vector
