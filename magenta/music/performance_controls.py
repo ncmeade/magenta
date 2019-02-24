@@ -29,7 +29,7 @@ from magenta.music.performance_lib import PerformanceEvent
 NOTES_PER_OCTAVE = constants.NOTES_PER_OCTAVE
 DEFAULT_NOTE_DENSITY = 15.0
 DEFAULT_PITCH_HISTOGRAM = [1.0] * NOTES_PER_OCTAVE
-DEFAULT_SIGNATURE_HISTOGRAM = [0.0, 0.0, 0.0]
+DEFAULT_SIGNATURE_HISTOGRAM = [0.0, 0.0]
 DEFAULT_TIMEPLACE_VECTOR = [0.0, 0.0, 0.0]
 DEFAULT_DATASET_SIGNAL = [0.0, 0.0]
 COMPOSERS = constants.COMPOSER_SET
@@ -914,10 +914,8 @@ class SignatureHistogramPerformanceControlSignal(PerformanceControlSignal):
       A list of signature class histograms the same length as `performance`, where
       each signature class histogram is the length of the default signature histogram
       of float values. 
-
-      The values sum to one. 
       
-      Format: [unknown, 2, 3]
+      Format: [2, 3]
     """
 
     # get signature for the given performance
@@ -931,32 +929,15 @@ class SignatureHistogramPerformanceControlSignal(PerformanceControlSignal):
     # get histogram corresponding to time sig numerator
     # TODO (NicholasBarreyre): put this in constants file
     if signature_numerator is None:
-        histogram = [1.00, 0.00, 0.00]
-    elif int(signature_numerator) == 2: 
-      histogram = [0.05, 0.95, 0.00]
-    elif int(signature_numerator) == 3:
-      histogram = [0.05, 0.00, 0.95]
-    elif int(signature_numerator) == 4:
-      histogram = [0.05, 0.95, 0.00]
-    elif int(signature_numerator) == 5:
-      histogram = [0.70, 0.15, 0.15]
-    elif int(signature_numerator) == 6:
-      histogram = [0.10, 0.10, 0.80]
-    elif int(signature_numerator) == 7:
-      histogram = [0.70, 0.20, 0.10]
-    elif int(signature_numerator) == 8:
-      histogram = [0.05, 0.95, 0.00]
-    elif int(signature_numerator) == 9:
-      histogram = [0.05, 0.00, 0.95]
-    elif int(signature_numerator) == 10:
-      histogram = [0.70, 0.15, 0.15]
-    elif int(signature_numerator) == 11:
-      histogram = [1.00, 0.00, 0.00]
-    elif int(signature_numerator) == 12:
-      histogram = [0.20, 0.40, 0.40]
+      histogram = [0.0, 0.0]
+    elif int(signature_numerator) in [2, 4, 8]:
+      histogram = [1.0, 0.2]
+    elif int(signature_numerator) in [3, 9]:
+      histogram = [0.2, 1.0]
+    elif int(signature_numerator) in [6.0, 12.0]:
+      histogram = [0.75, 0.75]
     else:
-      histogram = [1.00, 0.00, 0.00]
-      tf.logging.warning("Time signature numerator: {}".format(signature_numerator))
+      histogram = [0.0, 0.0]
 
     histogram_sequence = [histogram] * len(performance)
     
