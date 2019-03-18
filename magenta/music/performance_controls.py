@@ -929,15 +929,15 @@ class SignatureHistogramPerformanceControlSignal(PerformanceControlSignal):
     # get histogram corresponding to time sig numerator
     # TODO (NicholasBarreyre): put this in constants file
     if signature_numerator is None:
-      histogram = [0.0, 0.0]
+      histogram = [0, 0]
     elif int(signature_numerator) in [2, 4, 8]:
-      histogram = [1.0, 0.2]
+      histogram = [1, 0]
     elif int(signature_numerator) in [3, 9]:
-      histogram = [0.2, 1.0]
-    elif int(signature_numerator) in [6.0, 12.0]:
-      histogram = [0.75, 0.75]
+      histogram = [0, 1]
+    elif int(signature_numerator) in [6, 12]:
+      histogram = [1, 1]
     else:
-      histogram = [0.0, 0.0]
+      histogram = [0, 0]
 
     histogram_sequence = [histogram] * len(performance)
     
